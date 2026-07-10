@@ -3,10 +3,10 @@
 
 {# ── Inject all data for JavaScript ──────────────────────────────────── #}
 <script>
-  var APP_DATA = {{ apps_json }};
-  var CHART_DATA = {{ chart_data_json }};
-  var SESSION = {{ session | tojson }};
-  var STATS = {{ statistics | tojson }};
+  var APP_DATA = {{ apps_json | safe }};
+  var CHART_DATA = {{ chart_data_json | safe }};
+  var SESSION = {{ session | tojson | safe }};
+  var STATS = {{ statistics | tojson | safe }};
 </script>
 
 {# ── Hero / Executive Summary ─────────────────────────────────────────── #}
