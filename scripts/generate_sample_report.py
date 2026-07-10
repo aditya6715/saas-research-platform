@@ -1728,6 +1728,17 @@ async def main():
     Path("reports").mkdir(exist_ok=True)
     reporter = ReportGenerator(conn, sid, templates_dir="templates", reports_dir="reports")
     path = await reporter.generate(stats)
+
+    # Inline Chart.js to eliminate CDN blocking (Brave, Firefox shields, offline use)
+    from scripts.inline_assets import inline_chartjs
+
+    inline_chartjs(path)
+    docs_path = Path("docs/index.html")
+    if docs_path.exists():
+        import shutil
+
+        shutil.copy(path, docs_path)
+        inline_chartjs(docs_path)
     print(f"✓ Full 100-app report generated: {path}")
     print(f"  Apps: {len(APPS)}")
     print(f"  MCP gap: {stats['mcp_gap_percentage']}%")
