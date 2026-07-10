@@ -3,20 +3,17 @@ FROM python:3.11-slim AS deps
 
 WORKDIR /app
 
-# System deps for Playwright chromium
+# Minimal system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl wget ca-certificates \
-    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libgbm1 libasound2 libpango-1.0-0 libpangocairo-1.0-0 \
+    curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps (no dev/test deps in production image)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python deps — use core requirements for fast, conflict-free build
+COPY requirements-core.txt .
+RUN pip install --no-cache-dir -r requirements-core.txt
 
-# Install Playwright chromium browser
-RUN playwright install chromium --with-deps 2>/dev/null || true
+# Optional: install full requirements (browser automation) for production use
+# RUN pip install firecrawl-py browser-use playwright && playwright install chromium
 
 # ── Stage 2: Application ──────────────────────────────────────────────────
 FROM deps AS production
@@ -25,11 +22,13 @@ WORKDIR /app
 
 COPY . .
 
-# Create runtime directories
+# Runtime directories
 RUN mkdir -p data/cache data/exports data/evidence reports logs
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
+# Playwright browsers installed at runtime, not build time
+# Run: playwright install chromium  (inside the container, first run)
 ENTRYPOINT ["python", "main.py"]
 CMD ["--help"]

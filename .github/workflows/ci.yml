@@ -110,7 +110,8 @@ jobs:
             openai==1.54.3 \
             pytest==8.3.3 \
             pytest-asyncio==0.24.0 \
-            pytest-mock==3.14.0
+            pytest-mock==3.14.0 \
+            pytest-timeout==2.3.1
 
       - name: Run integration tests
         run: pytest tests/integration/ -v --tb=short --timeout=60
@@ -130,10 +131,11 @@ jobs:
       - name: Build Docker image
         run: docker build -t saas-research-platform:test .
 
-      - name: Smoke test entrypoint
+      - name: Smoke test — help flag works
         run: |
           docker run --rm \
             -e OPENAI_API_KEY=sk-test \
             -e FIRECRAWL_API_KEY=fc-test \
             -e TAVILY_API_KEY=tvly-test \
             saas-research-platform:test --help
+        # Expected: Click prints the help menu and exits 0
