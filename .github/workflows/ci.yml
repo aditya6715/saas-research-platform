@@ -10,27 +10,27 @@ env:
   PYTHON_VERSION: "3.11"
 
 jobs:
+  # ── Job 1: Lint & Format ───────────────────────────────────────────────
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
 
       - name: Install linting deps
         run: pip install ruff black==24.10.0
 
-      - name: Run ruff
+      - name: ruff check
         run: ruff check .
 
-      - name: Check black formatting
+      - name: black check
         run: black --check .
 
+  # ── Job 2: Unit Tests ─────────────────────────────────────────────────
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -38,23 +38,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      # Install only lightweight deps needed for unit tests
+      # Skips playwright, browser-use, firecrawl which aren't needed for mocked tests
+      - name: Install test deps
+        run: |
+          pip install \
+            aiosqlite==0.20.0 \
+            pydantic==2.9.2 \
+            pydantic-settings==2.6.1 \
+            python-dotenv==1.0.1 \
+            pyyaml==6.0.2 \
+            jinja2==3.1.4 \
+            markupsafe==3.0.2 \
+            click==8.1.7 \
+            rich==13.9.4 \
+            tenacity==9.0.0 \
+            httpx==0.27.2 \
+            langgraph==0.2.28 \
+            langchain==0.3.7 \
+            langchain-openai==0.2.8 \
+            langchain-core==0.3.18 \
+            openai==1.54.3 \
+            pytest==8.3.3 \
+            pytest-asyncio==0.24.0 \
+            pytest-cov==5.0.0 \
+            pytest-mock==3.14.0
 
       - name: Run unit tests
-        run: pytest tests/unit/ -v --tb=short --cov=core --cov=agents --cov=database --cov-report=term-missing
+        run: pytest tests/unit/ -v --tb=short
         env:
-          # Unit tests use mocks — no real API keys needed
           OPENAI_API_KEY: sk-test-dummy
           FIRECRAWL_API_KEY: fc-test-dummy
           TAVILY_API_KEY: tvly-test-dummy
 
+  # ── Job 3: Integration Tests ──────────────────────────────────────────
   test-integration:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -62,14 +84,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install test deps
+        run: |
+          pip install \
+            aiosqlite==0.20.0 \
+            pydantic==2.9.2 \
+            pydantic-settings==2.6.1 \
+            python-dotenv==1.0.1 \
+            pyyaml==6.0.2 \
+            jinja2==3.1.4 \
+            markupsafe==3.0.2 \
+            click==8.1.7 \
+            rich==13.9.4 \
+            tenacity==9.0.0 \
+            httpx==0.27.2 \
+            langgraph==0.2.28 \
+            langchain==0.3.7 \
+            langchain-openai==0.2.8 \
+            langchain-core==0.3.18 \
+            openai==1.54.3 \
+            pytest==8.3.3 \
+            pytest-asyncio==0.24.0 \
+            pytest-mock==3.14.0
 
       - name: Run integration tests
         run: pytest tests/integration/ -v --tb=short --timeout=60
@@ -78,6 +119,7 @@ jobs:
           FIRECRAWL_API_KEY: fc-test-dummy
           TAVILY_API_KEY: tvly-test-dummy
 
+  # ── Job 4: Docker Build ───────────────────────────────────────────────
   docker-build:
     name: Docker Build Check
     runs-on: ubuntu-latest
@@ -88,9 +130,10 @@ jobs:
       - name: Build Docker image
         run: docker build -t saas-research-platform:test .
 
-      - name: Verify entrypoint exists
-        run: docker run --rm saas-research-platform:test --help
-        env:
-          OPENAI_API_KEY: sk-test
-          FIRECRAWL_API_KEY: fc-test
-          TAVILY_API_KEY: tvly-test
+      - name: Smoke test entrypoint
+        run: |
+          docker run --rm \
+            -e OPENAI_API_KEY=sk-test \
+            -e FIRECRAWL_API_KEY=fc-test \
+            -e TAVILY_API_KEY=tvly-test \
+            saas-research-platform:test --help
