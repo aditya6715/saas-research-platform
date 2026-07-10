@@ -11,7 +11,6 @@ import csv
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 from core.queue import TaskQueue
 

@@ -11,12 +11,12 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import UTC
 from pathlib import Path
 from typing import Any
 
 import aiosqlite
 
-from database.models import AppRecord
 from database.repository import AppRepository, EvidenceRepository, SessionRepository
 
 logger = logging.getLogger(__name__)
@@ -76,6 +76,7 @@ class DataExporter:
         review_items = []
         for row in rows:
             import json as _json
+
             d = dict(row)
             d["auth_methods"] = _json.loads(d.pop("auth_methods_json", "[]") or "[]")
             d["api_types"] = _json.loads(d.pop("api_types_json", "[]") or "[]")
@@ -150,8 +151,9 @@ class DataExporter:
 
             # Build update dict from corrected fields
             import json as _json
-            from datetime import datetime, timezone
-            now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            from datetime import datetime
+
+            now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
             updates: dict[str, Any] = {
                 "human_reviewed_by": reviewer,
@@ -163,9 +165,17 @@ class DataExporter:
 
             # Apply editable fields
             for field in [
-                "category", "description", "primary_auth", "access_model",
-                "buildability_verdict", "biggest_blocker", "documentation_url",
-                "mcp_support", "mcp_repo_url", "base_api_url", "rate_limits",
+                "category",
+                "description",
+                "primary_auth",
+                "access_model",
+                "buildability_verdict",
+                "biggest_blocker",
+                "documentation_url",
+                "mcp_support",
+                "mcp_repo_url",
+                "base_api_url",
+                "rate_limits",
             ]:
                 if field in item and item[field] is not None:
                     updates[field] = item[field]
@@ -180,7 +190,9 @@ class DataExporter:
                 "INSERT INTO human_reviews (app_id, field_name, original_value, corrected_value, "
                 "reviewer_name, reason, allow_overwrite) VALUES (?,?,?,?,?,?,?)",
                 (
-                    app_id, "bulk_review", "pre-review",
+                    app_id,
+                    "bulk_review",
+                    "pre-review",
                     _json.dumps({k: v for k, v in item.items() if not k.startswith("_")}),
                     reviewer,
                     item.get("review_notes", ""),

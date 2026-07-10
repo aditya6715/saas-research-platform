@@ -1,6 +1,5 @@
 """Tests for core/buildability.py"""
 
-import pytest
 from core.buildability import BiggestBlocker, BuildabilityVerdict, compute_verdict
 
 
@@ -26,7 +25,10 @@ class TestComputeVerdict:
 
     def test_gated_with_sandbox_is_workaround(self):
         v, _ = compute_verdict(["REST"], "Gated", 0.9, "https://docs.com", has_sandbox=True)
-        assert v in (BuildabilityVerdict.FULLY_BUILDABLE, BuildabilityVerdict.BUILDABLE_WITH_WORKAROUNDS)
+        assert v in (
+            BuildabilityVerdict.FULLY_BUILDABLE,
+            BuildabilityVerdict.BUILDABLE_WITH_WORKAROUNDS,
+        )
 
     def test_fully_buildable_rest_self_serve(self):
         v, b = compute_verdict(["REST"], "Self-Serve", 0.9, "https://docs.com")

@@ -15,14 +15,15 @@ from pydantic import BaseModel, Field
 from agents.base import BaseAgent
 from database.repository import AgentLogRepository
 
-
 VALID_API_TYPES = ["REST", "GraphQL", "gRPC", "WebSocket", "Webhook", "SDK-only", "None"]
 
 
 class APIAnalysisOutput(BaseModel):
     api_types: list[str] = Field(description="All API surface types detected")
     base_url: str | None = Field(None, description="Base API URL e.g. https://api.example.com/v1")
-    versioning_scheme: str | None = Field(None, description="e.g. 'URL path (/v1)', 'Header', 'Query param'")
+    versioning_scheme: str | None = Field(
+        None, description="e.g. 'URL path (/v1)', 'Header', 'Query param'"
+    )
     rate_limits: str | None = Field(None, description="Rate limit description from docs")
     openapi_url: str | None = Field(None, description="OpenAPI/Swagger spec URL if found")
     graphql_schema_url: str | None = Field(None, description="GraphQL schema or introspection URL")
@@ -96,10 +97,23 @@ class APIAnalyzerAgent(BaseAgent):
             }
 
         # Prioritize API reference chunks
-        api_chunks = [c for c in chunks if any(
-            kw in c.get("content", "").lower()
-            for kw in ["api", "endpoint", "rest", "graphql", "grpc", "http", "request", "response"]
-        )]
+        api_chunks = [
+            c
+            for c in chunks
+            if any(
+                kw in c.get("content", "").lower()
+                for kw in [
+                    "api",
+                    "endpoint",
+                    "rest",
+                    "graphql",
+                    "grpc",
+                    "http",
+                    "request",
+                    "response",
+                ]
+            )
+        ]
         target_chunks = (api_chunks or chunks)[:6]
         combined = "\n\n---\n\n".join(
             f"[Source: {c['source_url']}]\n{c['content']}" for c in target_chunks

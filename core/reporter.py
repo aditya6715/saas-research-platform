@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -76,7 +76,7 @@ class ReportGenerator:
             "chart_data": chart_data,
             "chart_data_json": json.dumps(chart_data),
             "insights": statistics.get("insights", {}),
-            "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+            "generated_at": datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
             "session_id": self.session_id,
             "total_apps": len(apps),
         }
@@ -92,12 +92,19 @@ class ReportGenerator:
 
     def _build_chart_data(self, stats: dict[str, Any]) -> dict[str, Any]:
         """Prepare Chart.js-ready datasets from statistics."""
+
         def to_chartjs(distribution: dict[str, int], colors: list[str] | None = None) -> dict:
             labels = list(distribution.keys())
             data = list(distribution.values())
             default_colors = [
-                "#6366f1", "#8b5cf6", "#06b6d4", "#10b981",
-                "#f59e0b", "#ef4444", "#3b82f6", "#84cc16",
+                "#6366f1",
+                "#8b5cf6",
+                "#06b6d4",
+                "#10b981",
+                "#f59e0b",
+                "#ef4444",
+                "#3b82f6",
+                "#84cc16",
             ]
             bg = (colors or default_colors)[: len(labels)]
             return {"labels": labels, "datasets": [{"data": data, "backgroundColor": bg}]}

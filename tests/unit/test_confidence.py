@@ -1,12 +1,11 @@
 """Tests for core/confidence.py"""
 
-import pytest
 from core.confidence import (
+    FIELD_WEIGHTS,
+    accuracy_progression_report,
     compute_app_confidence,
     compute_field_confidence,
     needs_human_review,
-    accuracy_progression_report,
-    FIELD_WEIGHTS,
 )
 
 
@@ -45,11 +44,11 @@ class TestComputeFieldConfidence:
 
 class TestComputeAppConfidence:
     def test_perfect_scores_give_1(self):
-        scores = {field: 1.0 for field in FIELD_WEIGHTS}
+        scores = dict.fromkeys(FIELD_WEIGHTS, 1.0)
         assert compute_app_confidence(scores) == 1.0
 
     def test_zero_scores_give_0(self):
-        scores = {field: 0.0 for field in FIELD_WEIGHTS}
+        scores = dict.fromkeys(FIELD_WEIGHTS, 0.0)
         assert compute_app_confidence(scores) == 0.0
 
     def test_partial_scores_weighted(self):
@@ -65,7 +64,7 @@ class TestComputeAppConfidence:
         assert result == 0.0
 
     def test_result_in_range(self):
-        scores = {f: 0.7 for f in FIELD_WEIGHTS}
+        scores = dict.fromkeys(FIELD_WEIGHTS, 0.7)
         result = compute_app_confidence(scores)
         assert 0.0 <= result <= 1.0
 
@@ -87,7 +86,12 @@ class TestNeedsHumanReview:
 class TestAccuracyProgressionReport:
     def test_returns_four_stages(self):
         result = accuracy_progression_report([0.7], [0.85], [0.9], [0.99])
-        assert set(result.keys()) == {"initial", "post_cross_source", "post_browser", "post_human_review"}
+        assert set(result.keys()) == {
+            "initial",
+            "post_cross_source",
+            "post_browser",
+            "post_human_review",
+        }
 
     def test_empty_lists_return_zero(self):
         result = accuracy_progression_report([], [], [], [])

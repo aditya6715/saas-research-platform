@@ -7,16 +7,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from database.models import AppRecord
-from database.repository import AppRepository
 
 
 class TestReportGenerator:
-    async def test_report_generates_html_file(
-        self, db_conn, sample_session, tmp_path, app_repo
-    ):
+    async def test_report_generates_html_file(self, db_conn, sample_session, tmp_path, app_repo):
         from core.reporter import ReportGenerator
 
         # Insert some test apps
@@ -114,15 +109,29 @@ class TestReportGenerator:
             reports_dir=tmp_path / "reports",
         )
         statistics = {
-            "session_id": sample_session.id, "total_apps": 0,
-            "avg_confidence": 0.0, "human_review_count": 0,
-            "verified_count": 0, "auth_distribution": {},
-            "api_surface_distribution": {}, "access_model_distribution": {},
-            "buildability_distribution": {}, "mcp_support_distribution": {},
-            "mcp_gap_percentage": 0.0, "top_blockers": [], "easy_wins": [],
-            "hard_integrations": [], "category_distribution": {},
-            "category_breakdown": {}, "multi_auth_count": 0,
-            "insights": {"headline": "", "key_findings": [], "recommendations": [], "easy_wins_preview": []},
+            "session_id": sample_session.id,
+            "total_apps": 0,
+            "avg_confidence": 0.0,
+            "human_review_count": 0,
+            "verified_count": 0,
+            "auth_distribution": {},
+            "api_surface_distribution": {},
+            "access_model_distribution": {},
+            "buildability_distribution": {},
+            "mcp_support_distribution": {},
+            "mcp_gap_percentage": 0.0,
+            "top_blockers": [],
+            "easy_wins": [],
+            "hard_integrations": [],
+            "category_distribution": {},
+            "category_breakdown": {},
+            "multi_auth_count": 0,
+            "insights": {
+                "headline": "",
+                "key_findings": [],
+                "recommendations": [],
+                "easy_wins_preview": [],
+            },
         }
         output = await reporter.generate(statistics)
         html = Path(output).read_text()

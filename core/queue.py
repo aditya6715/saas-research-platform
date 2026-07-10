@@ -10,8 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
 
 import aiosqlite
 
@@ -83,8 +82,7 @@ class TaskQueue:
         """
         async with self._lock:
             cursor = await self.conn.execute(
-                "SELECT * FROM apps WHERE session_id=? AND status='pending' "
-                "ORDER BY id LIMIT 1",
+                "SELECT * FROM apps WHERE session_id=? AND status='pending' " "ORDER BY id LIMIT 1",
                 (self.session_id,),
             )
             row = await cursor.fetchone()
@@ -92,7 +90,7 @@ class TaskQueue:
                 return None
 
             app = AppRecord.from_db_row(dict(row))
-            now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
             await self.conn.execute(
                 "UPDATE apps SET status='in_progress', updated_at=? WHERE id=?",
                 (now, app.id),
@@ -111,7 +109,9 @@ class TaskQueue:
         retry_count = await self._repo.increment_retry(app_id)
         if retry_count < self.max_retries:
             await self._repo.update_status(app_id, "pending", error)
-            logger.info("App %s reset to pending (retry %d/%d)", app_id, retry_count, self.max_retries)
+            logger.info(
+                "App %s reset to pending (retry %d/%d)", app_id, retry_count, self.max_retries
+            )
         else:
             await self._repo.update_status(app_id, "failed", error)
             logger.warning("App %s permanently failed after %d retries", app_id, retry_count)

@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import logging
 from collections import Counter
-from pathlib import Path
 from typing import Any
 
 import aiosqlite
@@ -62,9 +61,13 @@ class PatternDiscoveryEngine:
 
         # ── Quality metrics ───────────────────────────────────────────────
         confidences = [a.get("confidence_score", 0.0) for a in apps]
-        stats["avg_confidence"] = round(sum(confidences) / len(confidences), 4) if confidences else 0.0
+        stats["avg_confidence"] = (
+            round(sum(confidences) / len(confidences), 4) if confidences else 0.0
+        )
         stats["human_review_count"] = sum(1 for a in apps if a.get("human_review_required"))
-        stats["verified_count"] = sum(1 for a in apps if a.get("status") in ("completed", "verified"))
+        stats["verified_count"] = sum(
+            1 for a in apps if a.get("status") in ("completed", "verified")
+        )
 
         # ── Auth method co-occurrence (apps supporting both API Key + OAuth) ──
         stats["multi_auth_count"] = self._multi_auth_count(apps)
@@ -127,7 +130,8 @@ class PatternDiscoveryEngine:
         This represents Composio's highest-priority integration targets.
         """
         apps_with_api = [
-            a for a in apps
+            a
+            for a in apps
             if a.get("api_types") and a["api_types"] != ["None"] and a["api_types"] != []
         ]
         if not apps_with_api:
@@ -135,13 +139,16 @@ class PatternDiscoveryEngine:
         no_mcp = [a for a in apps_with_api if a.get("mcp_support") in (None, "None")]
         return round(len(no_mcp) / len(apps_with_api) * 100, 1)
 
-    def _easy_wins(self, apps: list[dict], min_confidence: float = 0.85, top_n: int = 15) -> list[str]:
+    def _easy_wins(
+        self, apps: list[dict], min_confidence: float = 0.85, top_n: int = 15
+    ) -> list[str]:
         """
         Easy wins: Self-Serve/Freemium + REST/GraphQL + no MCP + high confidence.
         These are the highest-priority integration targets.
         """
         wins = [
-            a for a in apps
+            a
+            for a in apps
             if a.get("access_model") in ("Self-Serve", "Freemium")
             and any(t in (a.get("api_types") or []) for t in ("REST", "GraphQL"))
             and a.get("mcp_support") in (None, "None")
@@ -155,7 +162,8 @@ class PatternDiscoveryEngine:
         Hard integrations: Blocked verdict or Gated + SDK-only.
         """
         hard = [
-            a for a in apps
+            a
+            for a in apps
             if a.get("buildability_verdict") == "Blocked"
             or (a.get("access_model") == "Gated" and "SDK-only" in (a.get("api_types") or []))
         ]
@@ -199,8 +207,7 @@ class PatternDiscoveryEngine:
 
         top_blockers = stats.get("top_blockers", [])
         blocker_str = (
-            ", ".join(b["blocker"] for b in top_blockers[:3])
-            if top_blockers else "None identified"
+            ", ".join(b["blocker"] for b in top_blockers[:3]) if top_blockers else "None identified"
         )
 
         return {

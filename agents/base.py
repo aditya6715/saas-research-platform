@@ -11,13 +11,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, TypeVar
 
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
-
 from database.repository import AgentLogRepository
 
 logger = logging.getLogger(__name__)
@@ -72,7 +65,11 @@ class BaseAgent(ABC):
                 last_exc = exc
                 self._logger.warning(
                     "%s attempt %d/%d failed for %s: %s",
-                    self.name, attempt, self.max_retries, app_name, exc,
+                    self.name,
+                    attempt,
+                    self.max_retries,
+                    app_name,
+                    exc,
                 )
                 await self._log(
                     "agent_retry",

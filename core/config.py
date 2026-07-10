@@ -95,18 +95,24 @@ def _merge_yaml_into_settings(settings: Settings, yaml_path: Path) -> None:
         "max_doc_pages": pipeline.get("max_doc_pages", settings.max_doc_pages),
         "max_doc_depth": pipeline.get("max_doc_depth", settings.max_doc_depth),
         "openai_model_extraction": models.get("extraction", settings.openai_model_extraction),
-        "openai_model_classification": models.get("classification", settings.openai_model_classification),
+        "openai_model_classification": models.get(
+            "classification", settings.openai_model_classification
+        ),
         "model_tiebreaker": models.get("tiebreaker", settings.model_tiebreaker),
         "max_tokens": models.get("max_tokens", settings.max_tokens),
         "cache_ttl_seconds": cache.get("ttl_seconds", settings.cache_ttl_seconds),
         "cache_enabled": cache.get("enabled", settings.cache_enabled),
-        "min_inter_request_delay": rate.get("min_inter_request_delay", settings.min_inter_request_delay),
+        "min_inter_request_delay": rate.get(
+            "min_inter_request_delay", settings.min_inter_request_delay
+        ),
         "backoff_initial": rate.get("backoff_initial", settings.backoff_initial),
         "backoff_max": rate.get("backoff_max", settings.backoff_max),
         "backoff_multiplier": rate.get("backoff_multiplier", settings.backoff_multiplier),
         "log_level": logging_cfg.get("level", settings.log_level).upper(),
         "easy_wins_count": output.get("easy_wins_count", settings.easy_wins_count),
-        "easy_wins_min_confidence": output.get("easy_wins_min_confidence", settings.easy_wins_min_confidence),
+        "easy_wins_min_confidence": output.get(
+            "easy_wins_min_confidence", settings.easy_wins_min_confidence
+        ),
     }
     # Use object.__setattr__ to bypass Pydantic's immutability for patching
     for k, v in overrides.items():

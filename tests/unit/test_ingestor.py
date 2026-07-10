@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -54,9 +53,7 @@ class TestCSVIngestor:
         csv = tmp_path / "apps.csv"
         csv.write_text("app_name,seed_url\nGitHub,https://github.com\n")
         await CSVIngestor(mock_queue).ingest(csv)
-        mock_queue.enqueue.assert_called_once_with(
-            app_name="GitHub", seed_url="https://github.com"
-        )
+        mock_queue.enqueue.assert_called_once_with(app_name="GitHub", seed_url="https://github.com")
 
     async def test_whitespace_trimmed_from_names(self, tmp_path, mock_queue):
         csv = tmp_path / "apps.csv"

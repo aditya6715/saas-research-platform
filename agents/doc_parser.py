@@ -10,13 +10,12 @@ from __future__ import annotations
 
 import re
 from typing import Any
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 from agents.base import BaseAgent
 from database.repository import AgentLogRepository
-from tools.firecrawl_client import FirecrawlClient
 from tools.browser_client import BrowserClient
-
+from tools.firecrawl_client import FirecrawlClient
 
 # Subpage path patterns worth crawling for API research
 RELEVANT_SUBPAGE_PATTERNS = re.compile(
@@ -69,13 +68,17 @@ class DocParserAgent(BaseAgent):
         app_name: str = state.get("app_name", "unknown")
 
         if not doc_url:
-            await self._log("skip", "No documentation URL — skipping parse", app_id, level="WARNING")
+            await self._log(
+                "skip", "No documentation URL — skipping parse", app_id, level="WARNING"
+            )
             return {**state, "chunks": [], "pages_parsed": 0, "parse_method": "skipped"}
 
         # ── Step 1: Crawl the root documentation page ─────────────────────
         root_content, parse_method = await self._fetch_page(doc_url)
         if not root_content:
-            await self._log("parse_failed", f"Could not extract content from {doc_url}", app_id, level="WARNING")
+            await self._log(
+                "parse_failed", f"Could not extract content from {doc_url}", app_id, level="WARNING"
+            )
             return {**state, "chunks": [], "pages_parsed": 0, "parse_method": "failed"}
 
         # ── Step 2: Discover relevant subpage links ───────────────────────
@@ -191,15 +194,19 @@ class DocParserAgent(BaseAgent):
             para_len = len(para)
             if current_len + para_len > max_chars and current_parts:
                 chunk_text = "\n\n".join(current_parts)
-                chunks.append(ContentChunk(
-                    content=chunk_text,
-                    source_url=source_url,
-                    chunk_index=idx,
-                    token_count=len(chunk_text) // 4,
-                ))
+                chunks.append(
+                    ContentChunk(
+                        content=chunk_text,
+                        source_url=source_url,
+                        chunk_index=idx,
+                        token_count=len(chunk_text) // 4,
+                    )
+                )
                 idx += 1
                 # Keep last overlap portion
-                overlap_text = chunk_text[-overlap_chars:] if len(chunk_text) > overlap_chars else chunk_text
+                overlap_text = (
+                    chunk_text[-overlap_chars:] if len(chunk_text) > overlap_chars else chunk_text
+                )
                 current_parts = [overlap_text]
                 current_len = len(overlap_text)
 
@@ -209,11 +216,13 @@ class DocParserAgent(BaseAgent):
         if current_parts:
             chunk_text = "\n\n".join(current_parts)
             if chunk_text.strip():
-                chunks.append(ContentChunk(
-                    content=chunk_text,
-                    source_url=source_url,
-                    chunk_index=idx,
-                    token_count=len(chunk_text) // 4,
-                ))
+                chunks.append(
+                    ContentChunk(
+                        content=chunk_text,
+                        source_url=source_url,
+                        chunk_index=idx,
+                        token_count=len(chunk_text) // 4,
+                    )
+                )
 
         return chunks

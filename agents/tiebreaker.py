@@ -63,7 +63,8 @@ class TiebreakerAgent(BaseAgent):
         app_name: str = state.get("app_name", "unknown")
 
         fields_needing_tiebreaker = [
-            f for f in ["auth_methods", "api_types", "access_model", "mcp_support"]
+            f
+            for f in ["auth_methods", "api_types", "access_model", "mcp_support"]
             if state.get(f"{f}_needs_tiebreaker")
         ]
 

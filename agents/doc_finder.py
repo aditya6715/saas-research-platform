@@ -12,14 +12,20 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
-from tools.search_client import SearchClient
 from agents.base import BaseAgent
 from database.repository import AgentLogRepository
-
+from tools.search_client import SearchClient
 
 DOC_PATH_PATTERNS = [
-    "/docs", "/api", "/developers", "/reference", "/developer",
-    "/api-reference", "/dev", "/documentation", "/getting-started",
+    "/docs",
+    "/api",
+    "/developers",
+    "/reference",
+    "/developer",
+    "/api-reference",
+    "/dev",
+    "/documentation",
+    "/getting-started",
 ]
 
 
@@ -47,7 +53,14 @@ class DocFinderAgent(BaseAgent):
         q1_results = await self.search.search(f"{app_name} API documentation developers")
         for r in q1_results[:5]:
             score = self._score_url(r["url"], app_name, seed_url)
-            candidates.append({"url": r["url"], "score": score, "source": "web_search_q1", "title": r.get("title", "")})
+            candidates.append(
+                {
+                    "url": r["url"],
+                    "score": score,
+                    "source": "web_search_q1",
+                    "title": r.get("title", ""),
+                }
+            )
 
         # ── Query 2: REST API reference ───────────────────────────────────
         q2_results = await self.search.search(f"{app_name} REST API reference documentation")
@@ -60,7 +73,14 @@ class DocFinderAgent(BaseAgent):
                     if c["url"] == r["url"]:
                         c["score"] = min(c["score"] + 0.10, 1.0)
             else:
-                candidates.append({"url": r["url"], "score": score, "source": "web_search_q2", "title": r.get("title", "")})
+                candidates.append(
+                    {
+                        "url": r["url"],
+                        "score": score,
+                        "source": "web_search_q2",
+                        "title": r.get("title", ""),
+                    }
+                )
 
         # ── Sort and select best ──────────────────────────────────────────
         candidates.sort(key=lambda x: x["score"], reverse=True)

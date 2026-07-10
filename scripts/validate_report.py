@@ -12,7 +12,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-
 REQUIRED_STRINGS = [
     # Structure
     "SaaS Integration Research",

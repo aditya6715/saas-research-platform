@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 async def main(review_file: str) -> None:
     from dotenv import load_dotenv
+
     load_dotenv()
 
     from core.config import get_settings

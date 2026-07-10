@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import time
-from pathlib import Path
-
-import pytest
 
 from core.cache import CacheEntry, DiskCache
 
@@ -43,7 +40,9 @@ class TestDiskCache:
         cache = DiskCache(tmp_path / "cache", ttl_seconds=1)
         cache.set("https://example.com", "stale content")
         # Manually expire by writing old timestamp
-        import hashlib, json
+        import hashlib
+        import json
+
         key = hashlib.sha256(b"https://example.com").hexdigest()
         path = tmp_path / "cache" / f"{key}.json"
         data = json.loads(path.read_text())
@@ -60,14 +59,16 @@ class TestDiskCache:
     def test_hit_ratio_tracking(self, tmp_path):
         cache = DiskCache(tmp_path / "cache", ttl_seconds=3600)
         cache.set("https://a.com", "a")
-        cache.get("https://a.com")   # hit
-        cache.get("https://b.com")   # miss
+        cache.get("https://a.com")  # hit
+        cache.get("https://b.com")  # miss
         assert cache._hits == 1
         assert cache._misses == 1
         assert cache.hit_ratio == 0.5
 
     def test_clear_expired_removes_stale(self, tmp_path):
-        import hashlib, json
+        import hashlib
+        import json
+
         cache = DiskCache(tmp_path / "cache", ttl_seconds=1)
         cache.set("https://stale.com", "stale")
         # Manually expire

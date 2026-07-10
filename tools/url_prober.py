@@ -8,9 +8,7 @@ Results are cached to avoid redundant network calls.
 
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Any
 
 import httpx
 

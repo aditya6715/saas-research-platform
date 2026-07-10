@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import aiosqlite
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class SessionManager:
@@ -83,7 +83,10 @@ class SessionManager:
         )
         logger.info(
             "Session %s finalized: %d completed, %d failed, avg_conf=%.3f",
-            session_id, completed_apps, failed_apps, avg_confidence,
+            session_id,
+            completed_apps,
+            failed_apps,
+            avg_confidence,
         )
 
     async def update_counts(self, session_id: str, total_apps: int) -> None:

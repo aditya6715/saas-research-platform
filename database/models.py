@@ -9,10 +9,9 @@ JSON array fields are stored as strings in SQLite and parsed here.
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 
 class AppRecord(BaseModel):
@@ -86,7 +85,7 @@ class AppRecord(BaseModel):
         }
 
     @classmethod
-    def from_db_row(cls, row: dict[str, Any]) -> "AppRecord":
+    def from_db_row(cls, row: dict[str, Any]) -> AppRecord:
         """Deserialize from SQLite row (parse JSON array strings)."""
         d = dict(row)
         d["auth_methods"] = json.loads(d.pop("auth_methods_json", "[]") or "[]")

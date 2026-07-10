@@ -40,7 +40,10 @@ class BrowserClient:
             logger.debug("Browser cache HIT: %s", url)
             return cached.content
 
-        instruction = instruction or "Extract the main content of this page as clean markdown text. Include any authentication, API, and pricing information."
+        instruction = (
+            instruction
+            or "Extract the main content of this page as clean markdown text. Include any authentication, API, and pricing information."
+        )
 
         # Try Browser Use first
         content = await self._try_browser_use(url, instruction)
@@ -98,7 +101,7 @@ class BrowserClient:
             if result and isinstance(result, str) and len(result.strip()) > 100:
                 return result.strip()
             return None
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.debug("Browser Use timed out for %s", url)
             return None
         except ImportError:
@@ -123,14 +126,16 @@ class BrowserClient:
                     await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
                     await page.wait_for_timeout(1500)
                     # Extract text from main content area
-                    text = await page.evaluate("""() => {
+                    text = await page.evaluate(
+                        """() => {
                         const selectors = ['main', 'article', '.content', '#content', 'body'];
                         for (const sel of selectors) {
                             const el = document.querySelector(sel);
                             if (el) return el.innerText;
                         }
                         return document.body.innerText;
-                    }""")
+                    }"""
+                    )
                     return text if text and len(text) > 200 else None
                 finally:
                     await browser.close()

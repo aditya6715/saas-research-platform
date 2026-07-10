@@ -15,21 +15,34 @@ from pydantic import BaseModel, Field
 from agents.base import BaseAgent
 from database.repository import AgentLogRepository
 
-
 VALID_AUTH_METHODS = [
-    "API Key", "OAuth 2.0", "OAuth 1.0a", "Basic Auth",
-    "JWT", "SAML", "OpenID Connect", "Session Cookie", "HMAC", "Custom",
+    "API Key",
+    "OAuth 2.0",
+    "OAuth 1.0a",
+    "Basic Auth",
+    "JWT",
+    "SAML",
+    "OpenID Connect",
+    "Session Cookie",
+    "HMAC",
+    "Custom",
 ]
 
 OAUTH_FLOWS = [
-    "authorization_code", "client_credentials", "implicit", "device_code", "pkce",
+    "authorization_code",
+    "client_credentials",
+    "implicit",
+    "device_code",
+    "pkce",
 ]
 
 
 class AuthMethodResult(BaseModel):
     method: str = Field(description="One of the valid auth method names")
     confidence: float = Field(ge=0.0, le=1.0, description="Extraction confidence 0-1")
-    oauth_flows: list[str] = Field(default_factory=list, description="OAuth flows if method is OAuth 2.0")
+    oauth_flows: list[str] = Field(
+        default_factory=list, description="OAuth flows if method is OAuth 2.0"
+    )
     evidence_snippet: str = Field(default="", description="Exact quote from docs (max 300 chars)")
     source_url: str = Field(default="", description="Source URL for this finding")
 
@@ -85,14 +98,20 @@ class AuthExtractorAgent(BaseAgent):
         app_name: str = state.get("app_name", "unknown")
 
         if not chunks:
-            await self._log("no_content", "No chunks available for auth extraction", app_id, level="WARNING")
+            await self._log(
+                "no_content", "No chunks available for auth extraction", app_id, level="WARNING"
+            )
             return {**state, "auth_result": None, "auth_confidence": 0.0}
 
         # Prioritize auth-relevant chunks
-        auth_chunks = [c for c in chunks if any(
-            kw in c.get("content", "").lower()
-            for kw in ["auth", "api key", "oauth", "bearer", "token", "credential", "secret"]
-        )]
+        auth_chunks = [
+            c
+            for c in chunks
+            if any(
+                kw in c.get("content", "").lower()
+                for kw in ["auth", "api key", "oauth", "bearer", "token", "credential", "secret"]
+            )
+        ]
         target_chunks = (auth_chunks or chunks)[:6]  # max ~48k chars
 
         combined_content = "\n\n---\n\n".join(
@@ -108,10 +127,7 @@ class AuthExtractorAgent(BaseAgent):
         result: AuthExtractionOutput = await self.llm.ainvoke(prompt)
 
         # Filter to valid method names only
-        valid_results = [
-            r for r in result.auth_methods
-            if r.method in VALID_AUTH_METHODS
-        ]
+        valid_results = [r for r in result.auth_methods if r.method in VALID_AUTH_METHODS]
 
         if not valid_results:
             await self._log(
@@ -129,7 +145,11 @@ class AuthExtractorAgent(BaseAgent):
                 "auth_confidence": 0.0,
             }
 
-        primary = result.primary_method if result.primary_method in VALID_AUTH_METHODS else valid_results[0].method
+        primary = (
+            result.primary_method
+            if result.primary_method in VALID_AUTH_METHODS
+            else valid_results[0].method
+        )
         avg_confidence = sum(r.confidence for r in valid_results) / len(valid_results)
 
         await self._log(

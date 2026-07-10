@@ -7,10 +7,9 @@ and automatic schema migration runner.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from pathlib import Path
-from typing import Any, AsyncGenerator
+from typing import Any
 
 import aiosqlite
 

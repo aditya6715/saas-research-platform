@@ -7,16 +7,16 @@ No LLM calls. Pure logic based on structured app record fields.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class BuildabilityVerdict(str, Enum):
+class BuildabilityVerdict(StrEnum):
     FULLY_BUILDABLE = "Fully Buildable"
     BUILDABLE_WITH_WORKAROUNDS = "Buildable with Workarounds"
     BLOCKED = "Blocked"
 
 
-class BiggestBlocker(str, Enum):
+class BiggestBlocker(StrEnum):
     NO_PUBLIC_API = "No Public API"
     AUTH_COMPLEXITY = "Auth Complexity"
     GATED_ACCESS = "Gated Access"
@@ -54,7 +54,9 @@ def compute_verdict(
         return BuildabilityVerdict.BLOCKED, BiggestBlocker.NO_PUBLIC_API
 
     if normalized_api == ["sdk-only"] or (
-        "sdk-only" in normalized_api and "rest" not in normalized_api and "graphql" not in normalized_api
+        "sdk-only" in normalized_api
+        and "rest" not in normalized_api
+        and "graphql" not in normalized_api
     ):
         return BuildabilityVerdict.BLOCKED, BiggestBlocker.SDK_ONLY
 

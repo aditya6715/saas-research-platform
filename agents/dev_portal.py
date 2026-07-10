@@ -8,7 +8,6 @@ using Browser Use and extracting pricing/access information.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +24,9 @@ class DevPortalOutput(BaseModel):
     access_model: str = Field(description="One of: Self-Serve, Freemium, Gated")
     pricing_tier_for_api: str | None = Field(None, description="What pricing tier gives API access")
     signup_url: str | None = Field(None, description="Direct URL to API signup/credentials page")
-    evidence_text: str = Field(default="", description="Key text from the portal confirming classification")
+    evidence_text: str = Field(
+        default="", description="Key text from the portal confirming classification"
+    )
     confidence: float = Field(ge=0.0, le=1.0)
     has_sandbox: bool = Field(default=False, description="Whether a sandbox/trial API is available")
     notes: str = Field(default="")
@@ -42,9 +43,9 @@ Page content extracted:
 ---
 
 Classify the access model:
-- Self-Serve: Developer can get API credentials RIGHT NOW by filling a form. 
+- Self-Serve: Developer can get API credentials RIGHT NOW by filling a form.
   No sales contact, no approval wait. (e.g., "Create free account → get API key")
-- Freemium: Limited API access available immediately (free tier), 
+- Freemium: Limited API access available immediately (free tier),
   but full/production access requires upgrade or approval.
 - Gated: API access requires contacting sales, submitting a business justification,
   or waiting for manual approval. "Contact us", "Request access", "Enterprise only"
@@ -105,14 +106,29 @@ class DevPortalAgent(BaseAgent):
         # Fall back to documentation content if browser fails
         if not content:
             chunks = state.get("chunks", [])
-            pricing_chunks = [c for c in chunks if any(
-                kw in c.get("content", "").lower()
-                for kw in ["pricing", "plan", "free", "enterprise", "api key", "credential", "signup", "register"]
-            )]
+            pricing_chunks = [
+                c
+                for c in chunks
+                if any(
+                    kw in c.get("content", "").lower()
+                    for kw in [
+                        "pricing",
+                        "plan",
+                        "free",
+                        "enterprise",
+                        "api key",
+                        "credential",
+                        "signup",
+                        "register",
+                    ]
+                )
+            ]
             content = "\n\n".join(c["content"] for c in pricing_chunks[:3])
 
         if not content:
-            await self._log("no_portal_content", f"No portal content for {app_name}", app_id, level="WARNING")
+            await self._log(
+                "no_portal_content", f"No portal content for {app_name}", app_id, level="WARNING"
+            )
             return {
                 **state,
                 "access_model": None,
@@ -162,7 +178,10 @@ class DevPortalAgent(BaseAgent):
             # Look for signup/dashboard URLs
             for r in results[:5]:
                 url = r.get("url", "")
-                if any(kw in url.lower() for kw in ["dashboard", "signup", "register", "console", "portal", "app."]):
+                if any(
+                    kw in url.lower()
+                    for kw in ["dashboard", "signup", "register", "console", "portal", "app."]
+                ):
                     return url
             return results[0]["url"]
         return doc_url

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import aiosqlite
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class AppRepository:
@@ -146,7 +146,10 @@ class EvidenceRepository:
             (app_id,),
         )
         rows = await cursor.fetchall()
-        return [EvidenceRecord(**{k: v for k, v in dict(r).items() if k in EvidenceRecord.model_fields}) for r in rows]
+        return [
+            EvidenceRecord(**{k: v for k, v in dict(r).items() if k in EvidenceRecord.model_fields})
+            for r in rows
+        ]
 
     async def get_for_field(self, app_id: int, field_name: str) -> list[EvidenceRecord]:
         cursor = await self.conn.execute(
@@ -154,7 +157,10 @@ class EvidenceRepository:
             (app_id, field_name),
         )
         rows = await cursor.fetchall()
-        return [EvidenceRecord(**{k: v for k, v in dict(r).items() if k in EvidenceRecord.model_fields}) for r in rows]
+        return [
+            EvidenceRecord(**{k: v for k, v in dict(r).items() if k in EvidenceRecord.model_fields})
+            for r in rows
+        ]
 
 
 class VerificationRepository:
@@ -178,7 +184,12 @@ class VerificationRepository:
             (app_id,),
         )
         rows = await cursor.fetchall()
-        return [VerificationRecord(**{k: v for k, v in dict(r).items() if k in VerificationRecord.model_fields}) for r in rows]
+        return [
+            VerificationRecord(
+                **{k: v for k, v in dict(r).items() if k in VerificationRecord.model_fields}
+            )
+            for r in rows
+        ]
 
 
 class SessionRepository:

@@ -36,6 +36,7 @@ class SearchClient:
     def _get_client(self) -> Any:
         if self._client is None:
             from tavily import TavilyClient
+
             self._client = TavilyClient(api_key=self.api_key)
         return self._client
 

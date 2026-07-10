@@ -69,10 +69,7 @@ def compute_app_confidence(field_scores: dict[str, float]) -> float:
     Returns:
         Weighted average confidence in [0.0, 1.0].
     """
-    total = sum(
-        field_scores.get(field, 0.0) * weight
-        for field, weight in FIELD_WEIGHTS.items()
-    )
+    total = sum(field_scores.get(field, 0.0) * weight for field, weight in FIELD_WEIGHTS.items())
     return round(total / _WEIGHT_SUM, 4)
 
 

@@ -11,12 +11,20 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from rich.console import Console
-from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 
-from core.queue import QueueStats, TaskQueue
+from core.queue import TaskQueue
 from database.models import AppRecord
 from database.repository import AppRepository
 
@@ -78,7 +86,9 @@ class Scheduler:
                 if app is None:
                     # Wait for in-progress tasks to complete
                     if tasks:
-                        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                        done, pending = await asyncio.wait(
+                            tasks, return_when=asyncio.FIRST_COMPLETED
+                        )
                         tasks = list(pending)
                     else:
                         await asyncio.sleep(0.5)
@@ -120,7 +130,7 @@ class Scheduler:
             elapsed = time.monotonic() - start
             logger.info("✓ %s completed in %.1fs", app.app_name, elapsed)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             error = f"Timed out after {self.timeout_seconds}s"
             logger.warning("⏱ %s timed out", app.app_name)
             await self.queue.fail(app.id, error)  # type: ignore[arg-type]

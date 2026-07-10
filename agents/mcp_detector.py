@@ -7,7 +7,6 @@ Searches GitHub, the MCP registry, and app documentation.
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from langchain_openai import ChatOpenAI
@@ -16,7 +15,6 @@ from pydantic import BaseModel, Field
 from agents.base import BaseAgent
 from database.repository import AgentLogRepository
 from tools.search_client import SearchClient
-
 
 MCP_REGISTRY_URL = "https://github.com/modelcontextprotocol/servers"
 
@@ -89,11 +87,13 @@ class MCPDetectorAgent(BaseAgent):
         all_results.extend(self._format_results(q1))
 
         # Strategy 2: MCP registry search
-        q2 = await self.search.search(f'site:github.com/modelcontextprotocol {app_name}')
+        q2 = await self.search.search(f"site:github.com/modelcontextprotocol {app_name}")
         all_results.extend(self._format_results(q2))
 
         # Strategy 3: App's own MCP announcement
-        q3 = await self.search.search(f'{app_name} "model context protocol" OR "MCP server" announcement')
+        q3 = await self.search.search(
+            f'{app_name} "model context protocol" OR "MCP server" announcement'
+        )
         all_results.extend(self._format_results(q3))
 
         if not all_results:
@@ -133,5 +133,7 @@ class MCPDetectorAgent(BaseAgent):
         """Format search results as readable text for LLM analysis."""
         formatted = []
         for r in results[:5]:
-            formatted.append(f"Title: {r.get('title', 'N/A')}\nURL: {r.get('url', '')}\n{r.get('snippet', '')}")
+            formatted.append(
+                f"Title: {r.get('title', 'N/A')}\nURL: {r.get('url', '')}\n{r.get('snippet', '')}"
+            )
         return formatted

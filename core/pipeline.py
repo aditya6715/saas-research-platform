@@ -202,10 +202,18 @@ class ResearchPipeline:
     async def _node_score_and_build(self, state: ResearchState) -> ResearchState:
         """Compute final confidence scores and buildability verdict."""
         field_scores = {
-            "auth_methods": state.get("auth_methods_verified_confidence", state.get("auth_confidence", 0.0)),
-            "api_types": state.get("api_types_verified_confidence", state.get("api_confidence", 0.0)),
-            "access_model": state.get("access_model_verified_confidence", state.get("access_model_confidence", 0.0)),
-            "mcp_support": state.get("mcp_support_verified_confidence", state.get("mcp_confidence", 0.0)),
+            "auth_methods": state.get(
+                "auth_methods_verified_confidence", state.get("auth_confidence", 0.0)
+            ),
+            "api_types": state.get(
+                "api_types_verified_confidence", state.get("api_confidence", 0.0)
+            ),
+            "access_model": state.get(
+                "access_model_verified_confidence", state.get("access_model_confidence", 0.0)
+            ),
+            "mcp_support": state.get(
+                "mcp_support_verified_confidence", state.get("mcp_confidence", 0.0)
+            ),
             "buildability_verdict": 0.9,  # deterministic rule — always high confidence
             "description": 0.8,
             "documentation_url": state.get("doc_url_confidence", 0.0),

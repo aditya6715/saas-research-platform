@@ -84,7 +84,7 @@ class VerifierAgent(BaseAgent):
 
         # Use a DIFFERENT sample of chunks than pass A (last half)
         mid = max(1, len(chunks) // 2)
-        verify_chunks = chunks[mid:mid + 4] or chunks[:4]
+        verify_chunks = chunks[mid : mid + 4] or chunks[:4]
         combined = "\n\n---\n\n".join(
             f"[Source: {c['source_url']}]\n{c['content']}" for c in verify_chunks
         )
@@ -180,5 +180,5 @@ class VerifierAgent(BaseAgent):
         if a is None or b is None:
             return False
         if isinstance(a, list) and isinstance(b, list):
-            return set(str(x) for x in a) == set(str(x) for x in b)
+            return {str(x) for x in a} == {str(x) for x in b}
         return str(a).strip().lower() == str(b).strip().lower()

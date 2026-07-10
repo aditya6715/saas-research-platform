@@ -7,17 +7,16 @@ Shared pytest fixtures for all test modules.
 from __future__ import annotations
 
 import asyncio
-import json
-import tempfile
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Any, AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import aiosqlite
 import pytest
 import pytest_asyncio
 
-from database.connection import DatabaseManager, apply_migrations
+from database.connection import apply_migrations
 from database.models import AppRecord, ResearchSession
 from database.repository import (
     AgentLogRepository,
@@ -113,9 +112,11 @@ def mock_llm():
 @pytest.fixture
 def mock_search():
     search = MagicMock()
-    search.search = AsyncMock(return_value=[
-        {"url": "https://testapp.com/docs/api", "title": "TestApp API Docs", "snippet": ""},
-    ])
+    search.search = AsyncMock(
+        return_value=[
+            {"url": "https://testapp.com/docs/api", "title": "TestApp API Docs", "snippet": ""},
+        ]
+    )
     return search
 
 
@@ -147,7 +148,7 @@ def sample_state() -> dict[str, Any]:
         "chunks": [
             {
                 "content": "## Authentication\nStripe uses API keys to authenticate requests. "
-                           "All API requests must include your API key.",
+                "All API requests must include your API key.",
                 "source_url": "https://stripe.com/docs/api/authentication",
                 "chunk_index": 0,
                 "token_count": 400,

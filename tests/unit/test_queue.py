@@ -1,11 +1,8 @@
 """Tests for core/queue.py — queue state machine."""
 
-import pytest
 import pytest_asyncio
-import aiosqlite
 
 from core.queue import TaskQueue
-from database.models import AppRecord
 from database.repository import AppRepository
 
 
@@ -56,7 +53,9 @@ class TestTaskQueue:
         updated = await repo.get_by_id(app.id)
         assert updated.status == "completed"
 
-    async def test_fail_increments_retry_and_resets_to_pending(self, queue, db_conn, sample_session):
+    async def test_fail_increments_retry_and_resets_to_pending(
+        self, queue, db_conn, sample_session
+    ):
         await queue.enqueue("FailApp")
         app = await queue.claim_next()
         await queue.fail(app.id, "timeout")

@@ -46,9 +46,7 @@ def setup_logging(level: str = "INFO") -> None:
         backupCount=5,
         encoding="utf-8",
     )
-    file_handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
-    )
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     handlers.append(file_handler)
 
     logging.basicConfig(
@@ -65,11 +63,12 @@ def setup_logging(level: str = "INFO") -> None:
 def check_env_vars() -> None:
     """Validate required env vars are set. Exit with helpful message if not."""
     from core.config import validate_required_env_vars
+
     missing = validate_required_env_vars()
     if missing:
         console.print(
             Panel(
-                f"[red]Missing required environment variables:[/red]\n"
+                "[red]Missing required environment variables:[/red]\n"
                 + "\n".join(f"  • {v}" for v in missing)
                 + "\n\n[dim]Copy .env.example to .env and fill in the values.[/dim]",
                 title="Configuration Error",
@@ -92,6 +91,7 @@ async def _run_pipeline(input_csv: str, resume: bool = False) -> None:
     from agents.mcp_detector import MCPDetectorAgent
     from agents.tiebreaker import TiebreakerAgent
     from agents.verifier import VerifierAgent
+    from core.cache import DiskCache
     from core.config import get_settings
     from core.exporter import DataExporter
     from core.ingestor import CSVIngestor
@@ -101,7 +101,6 @@ async def _run_pipeline(input_csv: str, resume: bool = False) -> None:
     from core.reporter import ReportGenerator
     from core.scheduler import Scheduler
     from core.session import SessionManager
-    from core.cache import DiskCache
     from database.connection import DatabaseManager
     from database.repository import (
         AgentLogRepository,
@@ -161,18 +160,23 @@ async def _run_pipeline(input_csv: str, resume: bool = False) -> None:
         # ── Agents ───────────────────────────────────────────────────────
         pipeline = ResearchPipeline(
             doc_finder=DocFinderAgent(search, log_repo, session.id),
-            doc_parser=DocParserAgent(firecrawl, browser, log_repo, session.id,
-                                      max_doc_pages=settings.max_doc_pages),
+            doc_parser=DocParserAgent(
+                firecrawl, browser, log_repo, session.id, max_doc_pages=settings.max_doc_pages
+            ),
             auth_extractor=AuthExtractorAgent(llm_extract, log_repo, session.id),
             api_analyzer=APIAnalyzerAgent(llm_extract, log_repo, session.id),
             dev_portal=DevPortalAgent(llm_classify, browser, search, log_repo, session.id),
-            mcp_detector=MCPDetectorAgent(llm_classify, search, log_repo, session.id,
-                                          github_token=settings.github_token),
+            mcp_detector=MCPDetectorAgent(
+                llm_classify, search, log_repo, session.id, github_token=settings.github_token
+            ),
             evidence_collector=EvidenceCollectorAgent(ev_repo, log_repo, session.id),
             verifier=VerifierAgent(llm_extract, verif_repo, log_repo, session.id),
             tiebreaker=TiebreakerAgent(
-                ChatOpenAI(model=settings.model_tiebreaker, api_key=settings.openai_api_key, temperature=0),
-                log_repo, session.id,
+                ChatOpenAI(
+                    model=settings.model_tiebreaker, api_key=settings.openai_api_key, temperature=0
+                ),
+                log_repo,
+                session.id,
             ),
             app_repo=app_repo,
             confidence_threshold=settings.confidence_threshold,
@@ -248,6 +252,7 @@ async def _run_pipeline(input_csv: str, resume: bool = False) -> None:
 
 # ── CLI Commands ──────────────────────────────────────────────────────────
 
+
 @click.group()
 @click.option("--log-level", default="INFO", help="Logging level")
 def cli(log_level: str) -> None:
@@ -261,7 +266,12 @@ def cli(log_level: str) -> None:
 def run(input_csv: str) -> None:
     """Run the full research pipeline."""
     check_env_vars()
-    console.print(Panel("[bold green]SaaS Research Platform[/bold green]\nStarting research run...", border_style="green"))
+    console.print(
+        Panel(
+            "[bold green]SaaS Research Platform[/bold green]\nStarting research run...",
+            border_style="green",
+        )
+    )
     asyncio.run(_run_pipeline(input_csv, resume=False))
 
 
@@ -274,7 +284,12 @@ def resume() -> None:
 
 
 @cli.command("import-review")
-@click.option("--file", "review_file", default="data/exports/human_review.json", help="Path to human_review.json")
+@click.option(
+    "--file",
+    "review_file",
+    default="data/exports/human_review.json",
+    help="Path to human_review.json",
+)
 def import_review(review_file: str) -> None:
     """Apply human corrections from human_review.json."""
     check_env_vars()
@@ -287,6 +302,7 @@ def import_review(review_file: str) -> None:
         settings = get_settings()
         async with DatabaseManager(settings.database_path) as conn:
             from core.session import SessionManager
+
             session = await SessionManager(conn).load_latest()
             if not session:
                 console.print("[red]No session found.[/red]")
@@ -298,6 +314,7 @@ def import_review(review_file: str) -> None:
             # Regenerate report
             from core.pattern_engine import PatternDiscoveryEngine
             from core.reporter import ReportGenerator
+
             engine = PatternDiscoveryEngine(conn, session.id)
             statistics = await engine.run()
             reporter = ReportGenerator(conn, session.id)

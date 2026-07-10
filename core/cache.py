@@ -46,7 +46,7 @@ class CacheEntry:
         }
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "CacheEntry":
+    def from_dict(cls, d: dict[str, Any]) -> CacheEntry:
         return cls(
             content=d["content"],
             fetched_at=d["fetched_at"],

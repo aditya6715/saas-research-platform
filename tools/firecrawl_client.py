@@ -25,6 +25,7 @@ class FirecrawlClient:
     def _get_client(self) -> Any:
         if self._client is None:
             from firecrawl import FirecrawlApp
+
             self._client = FirecrawlApp(api_key=self.api_key)
         return self._client
 

@@ -6,18 +6,13 @@ Tests the full LangGraph workflow end-to-end with in-memory SQLite.
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
+from unittest.mock import AsyncMock, MagicMock
 
 from agents.api_analyzer import APIAnalysisOutput
 from agents.auth_extractor import AuthExtractionOutput, AuthMethodResult
 from agents.dev_portal import DevPortalOutput
 from agents.mcp_detector import MCPDetectionOutput
 from agents.verifier import VerificationPassOutput
-from agents.tiebreaker import TiebreakerOutput
-from core.buildability import BiggestBlocker, BuildabilityVerdict
 
 
 def make_auth_result() -> AuthExtractionOutput:
@@ -81,100 +76,131 @@ class TestFullPipeline:
     async def test_pipeline_produces_completed_app(
         self, db_conn, sample_session, log_repo, ev_repo, verif_repo, app_repo
     ):
-        from core.pipeline import ResearchPipeline
+        from agents.api_analyzer import APIAnalyzerAgent
+        from agents.auth_extractor import AuthExtractorAgent
+        from agents.dev_portal import DevPortalAgent
         from agents.doc_finder import DocFinderAgent
         from agents.doc_parser import DocParserAgent
-        from agents.auth_extractor import AuthExtractorAgent
-        from agents.api_analyzer import APIAnalyzerAgent
-        from agents.dev_portal import DevPortalAgent
-        from agents.mcp_detector import MCPDetectorAgent
         from agents.evidence_collector import EvidenceCollectorAgent
-        from agents.verifier import VerifierAgent
+        from agents.mcp_detector import MCPDetectorAgent
         from agents.tiebreaker import TiebreakerAgent
+        from agents.verifier import VerifierAgent
+        from core.pipeline import ResearchPipeline
 
         sid = sample_session.id
 
         # ── Mock all agents ───────────────────────────────────────────────
         doc_finder = MagicMock(spec=DocFinderAgent)
-        doc_finder.run = AsyncMock(return_value={
-            "app_id": 1, "app_name": "Stripe", "seed_url": None,
-            "session_id": sid,
-            "documentation_url": "https://stripe.com/docs/api",
-            "doc_url_confidence": 0.97,
-            "doc_candidates": [],
-            "human_review_required": False,
-        })
+        doc_finder.run = AsyncMock(
+            return_value={
+                "app_id": 1,
+                "app_name": "Stripe",
+                "seed_url": None,
+                "session_id": sid,
+                "documentation_url": "https://stripe.com/docs/api",
+                "doc_url_confidence": 0.97,
+                "doc_candidates": [],
+                "human_review_required": False,
+            }
+        )
 
         doc_parser = MagicMock(spec=DocParserAgent)
-        doc_parser.run = AsyncMock(side_effect=lambda s: {
-            **s,
-            "chunks": [{"content": "API Key auth. REST API.", "source_url": "https://stripe.com/docs", "chunk_index": 0, "token_count": 10}],
-            "pages_parsed": 1,
-            "parse_method": "firecrawl",
-        })
+        doc_parser.run = AsyncMock(
+            side_effect=lambda s: {
+                **s,
+                "chunks": [
+                    {
+                        "content": "API Key auth. REST API.",
+                        "source_url": "https://stripe.com/docs",
+                        "chunk_index": 0,
+                        "token_count": 10,
+                    }
+                ],
+                "pages_parsed": 1,
+                "parse_method": "firecrawl",
+            }
+        )
 
         auth_ex = MagicMock(spec=AuthExtractorAgent)
-        auth_ex.run = AsyncMock(side_effect=lambda s: {
-            **s,
-            "auth_result": [{"method": "API Key", "confidence": 0.97, "evidence_snippet": "API key required", "source_url": "https://stripe.com/docs", "oauth_flows": []}],
-            "auth_methods": ["API Key"],
-            "primary_auth": "API Key",
-            "oauth_flows": [],
-            "auth_confidence": 0.97,
-        })
+        auth_ex.run = AsyncMock(
+            side_effect=lambda s: {
+                **s,
+                "auth_result": [
+                    {
+                        "method": "API Key",
+                        "confidence": 0.97,
+                        "evidence_snippet": "API key required",
+                        "source_url": "https://stripe.com/docs",
+                        "oauth_flows": [],
+                    }
+                ],
+                "auth_methods": ["API Key"],
+                "primary_auth": "API Key",
+                "oauth_flows": [],
+                "auth_confidence": 0.97,
+            }
+        )
 
         api_an = MagicMock(spec=APIAnalyzerAgent)
-        api_an.run = AsyncMock(side_effect=lambda s: {
-            **s,
-            "api_types": ["REST", "Webhook"],
-            "base_api_url": "https://api.stripe.com/v1",
-            "api_versioning": "URL path",
-            "rate_limits": "100/sec",
-            "openapi_url": None,
-            "graphql_schema_url": None,
-            "api_confidence": 0.95,
-            "api_evidence_snippet": "REST API",
-            "api_source_url": "https://stripe.com/docs",
-        })
+        api_an.run = AsyncMock(
+            side_effect=lambda s: {
+                **s,
+                "api_types": ["REST", "Webhook"],
+                "base_api_url": "https://api.stripe.com/v1",
+                "api_versioning": "URL path",
+                "rate_limits": "100/sec",
+                "openapi_url": None,
+                "graphql_schema_url": None,
+                "api_confidence": 0.95,
+                "api_evidence_snippet": "REST API",
+                "api_source_url": "https://stripe.com/docs",
+            }
+        )
 
         dev_p = MagicMock(spec=DevPortalAgent)
-        dev_p.run = AsyncMock(side_effect=lambda s: {
-            **s,
-            "access_model": "Self-Serve",
-            "pricing_tier_for_api": "Free",
-            "portal_signup_url": "https://dashboard.stripe.com",
-            "portal_screenshot": None,
-            "access_model_confidence": 0.93,
-            "has_sandbox": True,
-            "portal_evidence_text": "Instant API key on signup",
-        })
+        dev_p.run = AsyncMock(
+            side_effect=lambda s: {
+                **s,
+                "access_model": "Self-Serve",
+                "pricing_tier_for_api": "Free",
+                "portal_signup_url": "https://dashboard.stripe.com",
+                "portal_screenshot": None,
+                "access_model_confidence": 0.93,
+                "has_sandbox": True,
+                "portal_evidence_text": "Instant API key on signup",
+            }
+        )
 
         mcp_d = MagicMock(spec=MCPDetectorAgent)
-        mcp_d.run = AsyncMock(side_effect=lambda s: {
-            **s,
-            "mcp_support": "Community",
-            "mcp_repo_url": "https://github.com/user/stripe-mcp",
-            "mcp_last_commit": "2025-06-01",
-            "mcp_confidence": 0.85,
-        })
+        mcp_d.run = AsyncMock(
+            side_effect=lambda s: {
+                **s,
+                "mcp_support": "Community",
+                "mcp_repo_url": "https://github.com/user/stripe-mcp",
+                "mcp_last_commit": "2025-06-01",
+                "mcp_confidence": 0.85,
+            }
+        )
 
         ev_col = MagicMock(spec=EvidenceCollectorAgent)
         ev_col.run = AsyncMock(side_effect=lambda s: {**s, "evidence_count": 5})
 
         verifier = MagicMock(spec=VerifierAgent)
-        verifier.run = AsyncMock(side_effect=lambda s: {
-            **s,
-            "verification_complete": True,
-            "pass_b_result": {},
-            "auth_methods_needs_tiebreaker": False,
-            "api_types_needs_tiebreaker": False,
-            "access_model_needs_tiebreaker": False,
-            "mcp_support_needs_tiebreaker": False,
-            "auth_methods_verified_confidence": 0.95,
-            "api_types_verified_confidence": 0.93,
-            "access_model_verified_confidence": 0.91,
-            "mcp_support_verified_confidence": 0.87,
-        })
+        verifier.run = AsyncMock(
+            side_effect=lambda s: {
+                **s,
+                "verification_complete": True,
+                "pass_b_result": {},
+                "auth_methods_needs_tiebreaker": False,
+                "api_types_needs_tiebreaker": False,
+                "access_model_needs_tiebreaker": False,
+                "mcp_support_needs_tiebreaker": False,
+                "auth_methods_verified_confidence": 0.95,
+                "api_types_verified_confidence": 0.93,
+                "access_model_verified_confidence": 0.91,
+                "mcp_support_verified_confidence": 0.87,
+            }
+        )
 
         tiebreaker = MagicMock(spec=TiebreakerAgent)
         tiebreaker.run = AsyncMock(side_effect=lambda s: s)
@@ -196,17 +222,20 @@ class TestFullPipeline:
 
         # Create the app in DB first
         from database.models import AppRecord
+
         app = AppRecord(session_id=sid, app_name="Stripe", seed_url=None)
         app_id = await app_repo.create(app)
 
         graph = pipeline.build()
-        result = await graph.ainvoke({
-            "app_id": app_id,
-            "app_name": "Stripe",
-            "seed_url": None,
-            "session_id": sid,
-            "human_review_required": False,
-        })
+        result = await graph.ainvoke(
+            {
+                "app_id": app_id,
+                "app_name": "Stripe",
+                "seed_url": None,
+                "session_id": sid,
+                "human_review_required": False,
+            }
+        )
 
         # ── Assertions ───────────────────────────────────────────────────
         assert result.get("buildability_verdict") == "Fully Buildable"
