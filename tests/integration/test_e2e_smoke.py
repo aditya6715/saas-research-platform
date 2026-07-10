@@ -5,6 +5,7 @@ Full end-to-end smoke test — runs the complete pipeline for 3 apps
 with all external services mocked. No API keys required.
 Validates DB state, confidence scores, buildability verdicts, and HTML output.
 """
+
 from __future__ import annotations
 
 import json

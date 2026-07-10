@@ -23,7 +23,7 @@ jobs:
           cache: pip
 
       - name: Install linting deps
-        run: pip install ruff==0.7.2 black==24.10.0
+        run: pip install ruff black==24.10.0
 
       - name: Run ruff
         run: ruff check .
