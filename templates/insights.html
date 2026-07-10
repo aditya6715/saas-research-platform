@@ -1,66 +1,42 @@
-{# ── Pattern Insights Panel ───────────────────────────────────────────── #}
-<section id="insights" class="pb-12 fade-in">
-  <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Key Insights</h2>
+<section id="insights" style="padding-bottom:2.5rem;" class="fade-in">
+  <h2>Key Insights</h2>
 
-  {# Headline insight #}
-  <div class="rounded-xl border border-brand-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 p-6 mb-6">
-    <div class="flex gap-3 items-start">
-      <span class="text-2xl mt-0.5">💡</span>
-      <p class="text-base font-medium text-indigo-900 dark:text-indigo-200">
-        {{ insights.get('headline', '') }}
-      </p>
+  <div class="insight-box">
+    <div style="display:flex;gap:.75rem;align-items:flex-start;">
+      <span style="font-size:1.4rem;flex-shrink:0;margin-top:.1rem;">💡</span>
+      <p>{{ insights.get('headline','') }}</p>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    {# Key findings #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-        <span class="text-brand-500">📊</span> Key Findings
-      </h3>
-      <ul class="space-y-3">
-        {% for finding in insights.get('key_findings', []) %}
-        <li class="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <span class="text-brand-500 mt-0.5 shrink-0">→</span>
-          <span>{{ finding }}</span>
-        </li>
+  <div class="insight-cols">
+    <div class="card">
+      <h3 style="margin-bottom:1rem;display:flex;align-items:center;gap:.4rem;"><span style="color:#6366f1;">📊</span> Key Findings</h3>
+      <ul class="insight-list">
+        {% for f in insights.get('key_findings',[]) %}
+        <li>{{ f }}</li>
         {% endfor %}
       </ul>
     </div>
-
-    {# Recommendations #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-        <span class="text-green-500">🎯</span> Recommendations
-      </h3>
-      <ul class="space-y-3">
-        {% for rec in insights.get('recommendations', []) %}
-        <li class="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <span class="text-green-500 mt-0.5 shrink-0">✓</span>
-          <span>{{ rec }}</span>
+    <div class="card">
+      <h3 style="margin-bottom:1rem;display:flex;align-items:center;gap:.4rem;"><span style="color:#22c55e;">🎯</span> Recommendations</h3>
+      <ul class="insight-list" style="list-style:none;padding:0;">
+        {% for r in insights.get('recommendations',[]) %}
+        <li style="display:flex;gap:.4rem;font-size:.875rem;color:#4b5563;padding:.4rem 0;">
+          <span style="color:#22c55e;flex-shrink:0;">✓</span><span>{{ r }}</span>
         </li>
         {% endfor %}
       </ul>
     </div>
   </div>
 
-  {# Easy Wins strip #}
-  {% set easy = insights.get('easy_wins_preview', []) %}
-  {% if easy %}
-  <div class="mt-6 rounded-xl border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/30 p-5">
-    <h3 class="text-sm font-semibold text-green-700 dark:text-green-400 mb-3 flex items-center gap-2">
-      <span>⚡</span> Easy Wins — Highest Priority Integrations
-    </h3>
-    <div class="flex flex-wrap gap-2">
-      {% for app_name in easy %}
-      <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
-        {{ app_name }}
-      </span>
-      {% endfor %}
-      {% if statistics.easy_wins | length > easy | length %}
-      <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-        +{{ statistics.easy_wins | length - easy | length }} more
-      </span>
+  {% set ew = insights.get('easy_wins_preview',[]) %}
+  {% if ew %}
+  <div style="margin-top:1.25rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:.75rem;padding:1.25rem;">
+    <h3 style="color:#166534;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem;"><span>⚡</span> Easy Wins — Highest Priority Integrations</h3>
+    <div class="easy-wins">
+      {% for n in ew %}<span class="win-badge">{{ n }}</span>{% endfor %}
+      {% if statistics.easy_wins|length > ew|length %}
+      <span class="win-badge" style="background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;">+{{ statistics.easy_wins|length - ew|length }} more</span>
       {% endif %}
     </div>
   </div>

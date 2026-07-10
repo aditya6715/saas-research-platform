@@ -5,24 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SaaS Integration Research — Composio</title>
 
-  <!-- Tailwind CSS (CDN play build — no build step required) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
-          },
-        },
-      },
-    };
-  </script>
+  <!-- Tailwind CSS via proper CDN stylesheet (not play script) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/base.min.css" crossorigin />
 
   <!-- Inter font -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,107 +15,339 @@
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-
   <!-- Mermaid.js -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 
   <style>
-    /* Custom scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+    /* ── Reset & base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      background: #f9fafb;
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+      transition: background .2s, color .2s;
+    }
+    body.dark { background: #030712; color: #f3f4f6; }
 
-    /* Fade-in animation */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-    .fade-in { animation: fadeIn 0.35s ease both; }
+    /* ── Typography ──────────────────────────────────────────────── */
+    h1 { font-size: 2.25rem; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; }
+    h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.25rem; }
+    h3 { font-size: .875rem; font-weight: 600; }
+    p  { color: #6b7280; }
+    body.dark p { color: #9ca3af; }
+    a  { color: #6366f1; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .8em;
+           background: #f3f4f6; padding: .1em .4em; border-radius: .25em; }
+    body.dark code { background: #1f2937; }
+    strong { font-weight: 600; color: #111827; }
+    body.dark strong { color: #f9fafb; }
 
-    /* Confidence bar */
-    .conf-bar { transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+    /* ── Layout ──────────────────────────────────────────────────── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+    @media(min-width:640px){ .container { padding: 0 2rem; } }
+    @media(min-width:1024px){ .container { padding: 0 3rem; } }
+    section { padding-bottom: 3rem; }
 
-    /* Mermaid diagram dark/light */
+    /* ── Header ──────────────────────────────────────────────────── */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(249,250,251,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #e5e7eb;
+    }
+    body.dark header { background: rgba(3,7,18,.92); border-bottom-color: #1f2937; }
+    .header-inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-size: 1.1rem; font-weight: 700; color: #6366f1; letter-spacing: -.01em; }
+    .logo span { color: #9ca3af; font-weight: 400; font-size: .875rem; margin-left: .5rem; }
+    nav { display: none; gap: 1.5rem; align-items: center; }
+    @media(min-width:768px){ nav { display: flex; } }
+    nav a { font-size: .875rem; color: #6b7280; transition: color .15s; }
+    nav a:hover { color: #6366f1; text-decoration: none; }
+    body.dark nav a { color: #9ca3af; }
+    #themeToggle {
+      padding: .4rem; border-radius: .5rem; border: none;
+      background: transparent; cursor: pointer; font-size: 1rem;
+      color: #6b7280;
+    }
+    #themeToggle:hover { background: #f3f4f6; }
+    body.dark #themeToggle:hover { background: #1f2937; }
+
+    /* ── Cards ───────────────────────────────────────────────────── */
+    .card {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: .75rem;
+      padding: 1.25rem;
+    }
+    body.dark .card { background: #111827; border-color: #1f2937; }
+
+    /* ── Metric cards ────────────────────────────────────────────── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1rem; }
+    @media(min-width:640px){ .metrics-grid { grid-template-columns: repeat(4,1fr); } }
+    .metric-card {
+      border-radius: .75rem; padding: 1.25rem; border: 1px solid;
+    }
+    .metric-card .label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .metric-card .value { font-size: 2.25rem; font-weight: 700; line-height: 1.1; margin: .4rem 0 .2rem; }
+    .metric-card .sub   { font-size: .7rem; opacity: .7; }
+    .mc-green  { border-color: #bbf7d0; background: #f0fdf4; }
+    .mc-green  .label { color: #16a34a; } .mc-green .value { color: #15803d; } .mc-green .sub { color: #16a34a; }
+    .mc-amber  { border-color: #fde68a; background: #fffbeb; }
+    .mc-amber  .label { color: #d97706; } .mc-amber .value { color: #b45309; } .mc-amber .sub { color: #d97706; }
+    .mc-red    { border-color: #fecaca; background: #fef2f2; }
+    .mc-red    .label { color: #dc2626; } .mc-red .value { color: #b91c1c; } .mc-red .sub { color: #dc2626; }
+    .mc-indigo { border-color: #c7d2fe; background: #eef2ff; }
+    .mc-indigo .label { color: #4f46e5; } .mc-indigo .value { color: #4338ca; } .mc-indigo .sub { color: #4f46e5; }
+    .mc-gray   { border-color: #e5e7eb; background: #f9fafb; }
+    .mc-gray   .label { color: #6b7280; } .mc-gray .value { color: #111827; } .mc-gray .sub { color: #9ca3af; }
+    body.dark .mc-green  { background: rgba(20,83,45,.25); border-color: #166534; }
+    body.dark .mc-green  .value { color: #86efac; } body.dark .mc-green .label { color: #4ade80; }
+    body.dark .mc-amber  { background: rgba(120,53,15,.25); border-color: #92400e; }
+    body.dark .mc-amber  .value { color: #fcd34d; } body.dark .mc-amber .label { color: #fbbf24; }
+    body.dark .mc-red    { background: rgba(127,29,29,.25); border-color: #991b1b; }
+    body.dark .mc-red    .value { color: #fca5a5; } body.dark .mc-red .label { color: #f87171; }
+    body.dark .mc-indigo { background: rgba(55,48,163,.25); border-color: #3730a3; }
+    body.dark .mc-indigo .value { color: #a5b4fc; } body.dark .mc-indigo .label { color: #818cf8; }
+    body.dark .mc-gray   { background: #111827; border-color: #1f2937; }
+    body.dark .mc-gray   .value { color: #f9fafb; }
+
+    /* ── Charts grid ─────────────────────────────────────────────── */
+    .charts-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    @media(min-width:640px){ .charts-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(min-width:1280px){ .charts-grid { grid-template-columns: repeat(3,1fr); } }
+    .chart-card { background: #fff; border: 1px solid #e5e7eb; border-radius: .75rem; padding: 1.25rem; }
+    body.dark .chart-card { background: #111827; border-color: #1f2937; }
+    .chart-card canvas { max-height: 200px; }
+
+    /* ── Insight panel ───────────────────────────────────────────── */
+    .insight-box {
+      background: #eef2ff; border: 1px solid #c7d2fe; border-radius: .75rem;
+      padding: 1.25rem; margin-bottom: 1.25rem;
+    }
+    body.dark .insight-box { background: rgba(55,48,163,.2); border-color: #3730a3; }
+    .insight-box p { color: #312e81; font-weight: 500; font-size: 1rem; }
+    body.dark .insight-box p { color: #c7d2fe; }
+    .insight-cols { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    @media(min-width:1024px){ .insight-cols { grid-template-columns: 1fr 1fr; } }
+    .insight-list { list-style: none; padding: 0; }
+    .insight-list li { display: flex; gap: .5rem; font-size: .875rem; color: #4b5563; padding: .4rem 0; }
+    body.dark .insight-list li { color: #9ca3af; }
+    .insight-list li::before { content: '→'; color: #6366f1; flex-shrink: 0; }
+    .easy-wins { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+    .win-badge {
+      padding: .25rem .75rem; border-radius: 9999px; font-size: .7rem; font-weight: 500;
+      background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;
+    }
+    body.dark .win-badge { background: rgba(20,83,45,.35); color: #86efac; border-color: #166534; }
+
+    /* ── Search / filter bar ─────────────────────────────────────── */
+    .filter-bar { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.25rem; }
+    .search-wrap { position: relative; flex: 1; min-width: 13rem; }
+    .search-wrap input {
+      width: 100%; padding: .5rem 1rem .5rem 2.25rem;
+      border: 1px solid #d1d5db; border-radius: .5rem;
+      font-size: .875rem; background: #fff; color: #111827;
+      outline: none;
+    }
+    body.dark .search-wrap input { background: #111827; border-color: #374151; color: #f3f4f6; }
+    .search-wrap input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+    .search-icon { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); font-size: .875rem; color: #9ca3af; }
+    select {
+      padding: .5rem .75rem; border: 1px solid #d1d5db; border-radius: .5rem;
+      font-size: .875rem; background: #fff; color: #374151; cursor: pointer; outline: none;
+    }
+    body.dark select { background: #111827; border-color: #374151; color: #d1d5db; }
+    select:focus { border-color: #6366f1; }
+    .btn-reset {
+      padding: .5rem .75rem; border: 1px solid #d1d5db; border-radius: .5rem;
+      font-size: .875rem; background: transparent; color: #6b7280; cursor: pointer;
+    }
+    body.dark .btn-reset { border-color: #374151; color: #9ca3af; }
+    .btn-reset:hover { background: #f3f4f6; }
+    body.dark .btn-reset:hover { background: #1f2937; }
+
+    /* ── Data table ──────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; border-radius: .75rem; border: 1px solid #e5e7eb; }
+    body.dark .table-wrap { border-color: #1f2937; }
+    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    thead tr { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+    body.dark thead tr { background: #111827; border-bottom-color: #1f2937; }
+    th { padding: .6rem 1rem; text-align: left; font-size: .7rem; font-weight: 600;
+         text-transform: uppercase; letter-spacing: .06em; color: #6b7280; white-space: nowrap; }
+    body.dark th { color: #9ca3af; }
+    tbody tr { border-bottom: 1px solid #f3f4f6; }
+    body.dark tbody tr { border-bottom-color: #1f2937; }
+    tbody tr:last-child { border-bottom: none; }
+    .app-row:hover { background: #f9fafb; cursor: pointer; }
+    body.dark .app-row:hover { background: rgba(31,41,55,.5); }
+    td { padding: .6rem 1rem; color: #374151; vertical-align: middle; }
+    body.dark td { color: #d1d5db; }
+    .td-name { font-weight: 500; color: #111827; }
+    body.dark .td-name { color: #f9fafb; }
+    .td-desc { font-size: .75rem; color: #9ca3af; margin-top: .1rem; max-width: 18rem; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; }
+    .hide-sm { display: none; } @media(min-width:640px){ .hide-sm { display: table-cell; } }
+    .hide-md { display: none; } @media(min-width:768px){ .hide-md { display: table-cell; } }
+    .hide-lg { display: none; } @media(min-width:1024px){ .hide-lg { display: table-cell; } }
+
+    /* ── Badges ──────────────────────────────────────────────────── */
+    .badge { display: inline-block; padding: .15rem .55rem; border-radius: .35rem;
+             font-size: .7rem; font-weight: 500; white-space: nowrap; }
+    .badge-green  { background: #dcfce7; color: #166534; }
+    .badge-amber  { background: #fef9c3; color: #854d0e; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .badge-indigo { background: #e0e7ff; color: #3730a3; }
+    .badge-gray   { background: #f3f4f6; color: #374151; }
+    body.dark .badge-green  { background: rgba(20,83,45,.35); color: #86efac; }
+    body.dark .badge-amber  { background: rgba(120,53,15,.35); color: #fcd34d; }
+    body.dark .badge-red    { background: rgba(127,29,29,.35); color: #fca5a5; }
+    body.dark .badge-indigo { background: rgba(55,48,163,.35); color: #a5b4fc; }
+    body.dark .badge-gray   { background: #1f2937; color: #9ca3af; }
+
+    /* ── Confidence color ────────────────────────────────────────── */
+    .conf-high { color: #16a34a; font-weight: 600; }
+    .conf-mid  { color: #d97706; font-weight: 600; }
+    .conf-low  { color: #dc2626; font-weight: 600; }
+
+    /* ── Detail expand panel ─────────────────────────────────────── */
+    .detail-row td { padding: 0; }
+    .detail-panel { overflow: hidden; transition: max-height .3s ease, opacity .25s; }
+    .detail-panel.closed { max-height: 0; opacity: 0; }
+    .detail-panel.open   { max-height: 4000px; opacity: 1; }
+    .detail-inner { padding: 1rem 1.25rem 1.25rem; background: rgba(248,250,252,.7); }
+    body.dark .detail-inner { background: rgba(17,24,39,.7); }
+    .detail-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+    @media(min-width:640px){ .detail-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(min-width:1024px){ .detail-grid { grid-template-columns: repeat(3,1fr); } }
+    .detail-field label { font-size: .65rem; font-weight: 700; text-transform: uppercase;
+                          letter-spacing: .06em; color: #9ca3af; display: block; margin-bottom: .2rem; }
+    .detail-field .val  { font-size: .8rem; color: #111827; word-break: break-all; }
+    body.dark .detail-field .val { color: #e5e7eb; }
+    .ev-link { display: block; font-size: .7rem; color: #6366f1; margin-top: .2rem;
+               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ev-quote { font-size: .7rem; color: #9ca3af; font-style: italic; margin-top: .1rem;
+                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .human-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .7rem;
+                   color: #16a34a; margin-top: .5rem; }
+    .review-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .7rem;
+                    color: #d97706; margin-top: .5rem; }
+
+    /* ── Verification section ────────────────────────────────────── */
+    .verif-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+    @media(min-width:1024px){ .verif-grid { grid-template-columns: 1fr 1fr; } }
+    .prog-bar-wrap { margin-bottom: .6rem; }
+    .prog-label { display: flex; justify-content: space-between; font-size: .75rem; color: #6b7280; margin-bottom: .25rem; }
+    body.dark .prog-label { color: #9ca3af; }
+    .prog-label span:last-child { font-weight: 600; color: #111827; }
+    body.dark .prog-label span:last-child { color: #f3f4f6; }
+    .prog-track { height: .4rem; background: #e5e7eb; border-radius: 9999px; }
+    body.dark .prog-track { background: #1f2937; }
+    .prog-fill  { height: .4rem; border-radius: 9999px; transition: width .6s ease; }
+    .stat-row { display: flex; justify-content: space-between; padding: .5rem 0;
+                border-bottom: 1px solid #f3f4f6; font-size: .875rem; }
+    body.dark .stat-row { border-bottom-color: #1f2937; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row .sk { color: #6b7280; }
+    .stat-row .sv { font-weight: 600; }
+    body.dark .stat-row .sk { color: #9ca3af; }
+    .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: .75rem;
+                padding: 1.25rem; margin-top: 1.25rem; }
+    body.dark .warn-box { background: rgba(120,53,15,.2); border-color: #92400e; }
+    .warn-box h3 { color: #92400e; font-size: .875rem; margin-bottom: .6rem; }
+    body.dark .warn-box h3 { color: #fbbf24; }
+    .warn-box ul { list-style: none; padding: 0; }
+    .warn-box li { font-size: .8rem; color: #78350f; margin-bottom: .4rem; }
+    body.dark .warn-box li { color: #fcd34d; }
+    .warn-box .note { font-size: .7rem; color: #a16207; margin-top: .5rem; }
+
+    /* ── Mermaid diagrams ────────────────────────────────────────── */
     .mermaid svg { max-width: 100%; height: auto; }
 
-    /* Table row hover */
-    .app-row { cursor: pointer; transition: background 0.15s; }
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer { border-top: 1px solid #e5e7eb; margin-top: 4rem; padding: 2rem 0; }
+    body.dark footer { border-top-color: #1f2937; }
+    .footer-inner { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;
+                    display: flex; flex-direction: column; gap: .5rem; align-items: center;
+                    justify-content: space-between; font-size: .8rem; color: #9ca3af; }
+    @media(min-width:640px){ .footer-inner { flex-direction: row; } }
 
-    /* Detail panel */
-    .detail-panel { transition: max-height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.25s; overflow: hidden; }
-    .detail-panel.closed { max-height: 0; opacity: 0; }
-    .detail-panel.open { max-height: 9999px; opacity: 1; }
+    /* ── Misc ────────────────────────────────────────────────────── */
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .fade-in { animation: fadeIn .35s ease both; }
+    .section-header { margin-bottom: 1.25rem; }
+    .divider { height: 1px; background: #e5e7eb; margin: .5rem 0 1.5rem; }
+    body.dark .divider { background: #1f2937; }
+    .no-results { text-align: center; padding: 3rem 1rem; color: #9ca3af; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
 
-<body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased transition-colors duration-200">
-
-  <!-- Dark mode init (before render to avoid flash) -->
+<body>
+  <!-- Dark mode init before render to avoid flash -->
   <script>
-    (function() {
-      const saved = localStorage.getItem('theme');
-      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-      }
+    (function(){
+      var s = localStorage.getItem('theme');
+      if(s==='dark'||(s===null&&window.matchMedia('(prefers-color-scheme:dark)').matches))
+        document.body.classList.add('dark');
     })();
   </script>
 
-  <!-- ── Sticky Header ─────────────────────────────────────────────── -->
-  <header class="sticky top-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <span class="text-brand-500 font-bold text-lg tracking-tight">⬡ Composio</span>
-        <span class="hidden sm:inline text-gray-400 dark:text-gray-500 text-sm">/ SaaS Research Platform</span>
-      </div>
-      <nav class="hidden md:flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-        <a href="#summary" class="hover:text-brand-500 transition-colors">Summary</a>
-        <a href="#charts" class="hover:text-brand-500 transition-colors">Charts</a>
-        <a href="#insights" class="hover:text-brand-500 transition-colors">Insights</a>
-        <a href="#table" class="hover:text-brand-500 transition-colors">Data</a>
-        <a href="#verification" class="hover:text-brand-500 transition-colors">Verification</a>
-        <a href="#architecture" class="hover:text-brand-500 transition-colors">Architecture</a>
+  <!-- ── Sticky Header ────────────────────────────────────────────── -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">⬡ Composio <span>/ SaaS Research Platform</span></div>
+      <nav>
+        <a href="#summary">Summary</a>
+        <a href="#charts">Charts</a>
+        <a href="#insights">Insights</a>
+        <a href="#table">Data</a>
+        <a href="#verification">Verification</a>
+        <a href="#architecture">Architecture</a>
       </nav>
-      <button
-        id="themeToggle"
-        onclick="toggleTheme()"
-        class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        aria-label="Toggle dark mode"
-      >
+      <button id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">
         <span id="themeIcon">🌙</span>
       </button>
     </div>
   </header>
 
-  <!-- ── Page Content ───────────────────────────────────────────────── -->
-  <main class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+  <!-- ── Page Content ─────────────────────────────────────────────── -->
+  <main class="container" style="padding-top:2.5rem">
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ── Footer ────────────────────────────────────────────────────── -->
-  <footer class="border-t border-gray-200 dark:border-gray-800 mt-16">
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-500">
-      <p>Generated by <strong class="text-gray-700 dark:text-gray-300">Autonomous SaaS Research Platform</strong> · {{ generated_at }}</p>
-      <p>Session <code class="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{{ session_id[:8] }}</code></p>
+  <!-- ── Footer ───────────────────────────────────────────────────── -->
+  <footer>
+    <div class="footer-inner">
+      <span>Generated by <strong>Autonomous SaaS Research Platform</strong> · {{ generated_at }}</span>
+      <span>Session <code>{{ session_id[:8] }}</code></span>
     </div>
   </footer>
 
-  <!-- ── Global Scripts ─────────────────────────────────────────────── -->
+  <!-- ── Global Scripts ───────────────────────────────────────────── -->
   <script>
-    // ── Dark mode toggle ──────────────────────────────────────────────
-    function toggleTheme() {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+    function toggleTheme(){
+      document.body.classList.toggle('dark');
+      var dark = document.body.classList.contains('dark');
+      localStorage.setItem('theme', dark?'dark':'light');
+      document.getElementById('themeIcon').textContent = dark ? '☀️' : '🌙';
     }
-    // Set correct icon on load
     document.getElementById('themeIcon').textContent =
-      document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+      document.body.classList.contains('dark') ? '☀️' : '🌙';
 
-    // ── Mermaid init ──────────────────────────────────────────────────
     mermaid.initialize({
       startOnLoad: true,
-      theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+      theme: document.body.classList.contains('dark') ? 'dark' : 'default',
       securityLevel: 'loose',
     });
   </script>
-
   {% block scripts %}{% endblock %}
 </body>
 </html>

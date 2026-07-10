@@ -1,41 +1,19 @@
-{# ── Executive Summary Hero ───────────────────────────────────────────── #}
-<section id="summary" class="pt-12 pb-10 fade-in">
-  <div class="flex flex-col gap-2">
-    <div class="flex items-center gap-2 text-sm font-medium text-brand-500">
-      <span>⬡</span>
-      <span>Autonomous Research Platform</span>
-    </div>
-    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-      SaaS Integration Research
-    </h1>
-    <p class="mt-2 text-lg text-gray-500 dark:text-gray-400 max-w-2xl">
-      {{ total_apps }} SaaS applications researched and verified by a multi-agent pipeline.
-      Every field is backed by sourced evidence and cross-verified for accuracy.
-    </p>
-
-    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
-      <span class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-        {{ statistics.buildability_distribution.get('Fully Buildable', 0) }} Fully Buildable
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
-        {{ statistics.buildability_distribution.get('Buildable with Workarounds', 0) }} With Workarounds
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-        {{ statistics.buildability_distribution.get('Blocked', 0) }} Blocked
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-brand-500 inline-block"></span>
-        {{ "%.1f"|format(statistics.avg_confidence * 100) }}% avg confidence
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>
-        {{ "%.0f"|format(statistics.mcp_gap_percentage) }}% MCP gap
-      </span>
-      <span class="text-gray-400 dark:text-gray-600">·</span>
-      <span>{{ generated_at }}</span>
-    </div>
+<section id="summary" class="fade-in" style="padding-top:.5rem;padding-bottom:2.5rem;">
+  <div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:600;color:#6366f1;margin-bottom:.75rem;">
+    <span>⬡</span><span>Autonomous Research Platform</span>
+  </div>
+  <h1>SaaS Integration Research</h1>
+  <p style="margin-top:.75rem;font-size:1.05rem;max-width:44rem;color:#6b7280;">
+    {{ total_apps }} SaaS applications researched and verified by a multi-agent pipeline.
+    Every field is backed by sourced evidence and independently cross-verified.
+  </p>
+  <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.4rem 1.5rem;font-size:.8rem;color:#9ca3af;align-items:center;">
+    <span><span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#22c55e;margin-right:.3rem;"></span>{{ statistics.buildability_distribution.get('Fully Buildable', 0) }} Fully Buildable</span>
+    <span><span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#f59e0b;margin-right:.3rem;"></span>{{ statistics.buildability_distribution.get('Buildable with Workarounds', 0) }} Workarounds</span>
+    <span><span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#ef4444;margin-right:.3rem;"></span>{{ statistics.buildability_distribution.get('Blocked', 0) }} Blocked</span>
+    <span><span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#6366f1;margin-right:.3rem;"></span>{{ "%.1f"|format(statistics.avg_confidence * 100) }}% avg confidence</span>
+    <span><span style="display:inline-block;width:.55rem;height:.55rem;border-radius:50%;background:#a78bfa;margin-right:.3rem;"></span>{{ "%.0f"|format(statistics.mcp_gap_percentage) }}% MCP gap</span>
+    <span style="color:#d1d5db;">·</span>
+    <span>{{ generated_at }}</span>
   </div>
 </section>

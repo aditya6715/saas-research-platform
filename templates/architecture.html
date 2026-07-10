@@ -1,12 +1,12 @@
-{# ── Architecture Diagrams ────────────────────────────────────────────── #}
-<section id="architecture" class="pb-12 fade-in">
-  <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">System Architecture</h2>
+<section id="architecture" style="padding-bottom:2.5rem;" class="fade-in">
+  <h2>System Architecture</h2>
 
-  <div class="space-y-8">
-    {# System overview #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Research Pipeline</h3>
-      <div class="mermaid text-xs">
+  <div style="display:grid;grid-template-columns:1fr;gap:1.25rem;">
+
+    <!-- Pipeline diagram -->
+    <div class="card">
+      <h3 style="margin-bottom:1rem;">Research Pipeline</h3>
+      <div class="mermaid" style="font-size:.75rem;">
 flowchart LR
     CSV[apps.csv] --> ING[Ingestor]
     ING --> Q[Queue]
@@ -32,61 +32,84 @@ flowchart LR
       </div>
     </div>
 
-    {# Verification pipeline #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Verification Pipeline</h3>
-      <div class="mermaid text-xs">
+    <!-- Verification diagram -->
+    <div class="card">
+      <h3 style="margin-bottom:1rem;">Verification Pipeline</h3>
+      <div class="mermaid" style="font-size:.75rem;">
 flowchart TD
     A[Pass A: Firecrawl + GPT-4o] --> CMP{Compare}
-    B[Pass B: Independent + Adversarial Prompt] --> CMP
-    CMP -->|Agree| BOOST[Confidence × 1.10]
-    CMP -->|Disagree| TB[Tiebreaker Agent GPT-4o]
-    TB --> BOOST2[Confidence × 0.90]
+    B[Pass B: Independent + Adversarial] --> CMP
+    CMP -->|Agree| BOOST[Confidence x1.10]
+    CMP -->|Disagree| TB[Tiebreaker GPT-4o]
+    TB --> PENALIZE[Confidence x0.90]
     BOOST --> BV[Browser Verification]
-    BOOST2 --> BV
-    BV -->|Confirmed| FINAL[Confidence × 1.05]
-    BV -->|Failed| FINAL2[Keep score]
-    FINAL --> THRESH{Score ≥ 0.85?}
-    FINAL2 --> THRESH
-    THRESH -->|Yes| VER[✅ Verified]
-    THRESH -->|No| HR[⚑ Human Review]
+    PENALIZE --> BV
+    BV -->|Confirmed| UP[Confidence x1.05]
+    BV -->|Skipped| KEEP[Keep score]
+    UP --> THR{Score ge 0.85?}
+    KEEP --> THR
+    THR -->|Yes| VER[Verified]
+    THR -->|No| HR[Human Review Flag]
       </div>
     </div>
 
-    {# Accuracy progression #}
-    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Accuracy Progression</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+    <!-- Accuracy table -->
+    <div class="card">
+      <h3 style="margin-bottom:1rem;">Accuracy Progression — How We Get to 99%</h3>
+      <div style="overflow-x:auto;">
+        <table>
           <thead>
-            <tr class="border-b border-gray-200 dark:border-gray-700">
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Stage</th>
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Mechanism</th>
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Target Accuracy</th>
-              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Visual</th>
+            <tr>
+              <th>Stage</th>
+              <th>Mechanism</th>
+              <th>Target</th>
+              <th style="width:9rem;">Progress</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-600 dark:text-gray-400">
-            {% for stage, mechanism, accuracy, width in [
-              ('Initial Extraction', 'Single-pass GPT-4o on Firecrawl content', '~78%', 78),
-              ('Parallel Extraction', '4 specialized agents vs 1 monolithic', '~84%', 84),
-              ('Cross-Source Verification', 'Pass A vs Pass B agreement', '~91%', 91),
-              ('Browser Verification', 'Playwright confirms portal behavior', '~95%', 95),
-              ('Human Review', 'Human corrects flagged records', '~99%', 99),
+          <tbody>
+            {% for stage, mech, target, pct in [
+              ('Initial Extraction','Single-pass GPT-4o on Firecrawl content','~78%', 78),
+              ('Parallel Extraction','4 specialized agents vs 1 monolithic','~84%', 84),
+              ('Cross-Source Verification','Pass A vs Pass B agreement','~91%', 91),
+              ('Browser Verification','Playwright confirms portal behavior','~95%', 95),
+              ('Human Review','Manual correction of flagged records','~99%', 99),
             ] %}
             <tr>
-              <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ stage }}</td>
-              <td class="px-4 py-2.5 text-xs">{{ mechanism }}</td>
-              <td class="px-4 py-2.5 font-mono text-brand-500 font-semibold">{{ accuracy }}</td>
-              <td class="px-4 py-2.5 w-32">
-                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                  <div class="h-2 bg-brand-500 rounded-full conf-bar" style="width: {{ width }}%"></div>
+              <td style="font-weight:500;color:#111827;white-space:nowrap;">{{ stage }}</td>
+              <td style="font-size:.75rem;color:#6b7280;">{{ mech }}</td>
+              <td style="font-family:'JetBrains Mono',monospace;color:#6366f1;font-weight:600;white-space:nowrap;">{{ target }}</td>
+              <td>
+                <div style="height:.35rem;background:#e5e7eb;border-radius:9999px;">
+                  <div style="width:{{ pct }}%;height:.35rem;background:#6366f1;border-radius:9999px;"></div>
                 </div>
               </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Tech stack -->
+    <div class="card">
+      <h3 style="margin-bottom:1rem;">Tech Stack</h3>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;">
+        {% for component, tech, reason in [
+          ('Orchestration','LangGraph','Explicit graph, stateful, resumable'),
+          ('Web Crawling','Firecrawl','Handles JS-rendered docs, returns markdown'),
+          ('Browser Automation','Browser Use + Playwright','LLM-guided portal verification'),
+          ('Web Search','Tavily','Structured results with relevance scores'),
+          ('LLM','GPT-4o / GPT-4o-mini','Best structured output; mini for cost'),
+          ('Database','SQLite WAL','Zero-ops, single file, concurrent writes'),
+          ('Data Validation','Pydantic v2','Strict schemas, LLM function calling'),
+          ('Report','Jinja2 + Chart.js','Self-contained HTML, no build step'),
+        ] %}
+        <div style="padding:.6rem;background:#f9fafb;border-radius:.5rem;border:1px solid #e5e7eb;">
+          <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:.2rem;">{{ component }}</div>
+          <div style="font-size:.8rem;font-weight:600;color:#111827;">{{ tech }}</div>
+          <div style="font-size:.7rem;color:#9ca3af;margin-top:.1rem;">{{ reason }}</div>
+        </div>
+        {% endfor %}
       </div>
     </div>
 
