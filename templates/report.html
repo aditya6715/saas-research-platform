@@ -3,35 +3,93 @@
 
 {# ── Inject all data for JavaScript ──────────────────────────────────── #}
 <script>
-  const APP_DATA = {{ apps_json }};
-  const CHART_DATA = {{ chart_data_json }};
-  const SESSION = {{ session | tojson }};
-  const STATS = {{ statistics | tojson }};
+  var APP_DATA = {{ apps_json }};
+  var CHART_DATA = {{ chart_data_json }};
+  var SESSION = {{ session | tojson }};
+  var STATS = {{ statistics | tojson }};
 </script>
 
 {# ── Hero / Executive Summary ─────────────────────────────────────────── #}
 {% include "summary.html" %}
-
 {# ── Key Metrics Cards ────────────────────────────────────────────────── #}
 {% include "metrics.html" %}
-
 {# ── Charts ───────────────────────────────────────────────────────────── #}
 {% include "charts.html" %}
-
 {# ── Pattern Insights ─────────────────────────────────────────────────── #}
 {% include "insights.html" %}
-
+{# ── Agent Workflow ───────────────────────────────────────────────────── #}
+{% include "agent_workflow.html" %}
 {# ── Research Data Table ──────────────────────────────────────────────── #}
 {% include "table.html" %}
-
 {# ── Verification & Accuracy ──────────────────────────────────────────── #}
 {% include "verification.html" %}
-
 {# ── Architecture Diagrams ────────────────────────────────────────────── #}
 {% include "architecture.html" %}
 
 {% endblock %}
 
 {% block scripts %}
+<script>
+// ── Chart initialization — runs after Chart.js CDN loaded and DOM ready ──
+window.addEventListener('DOMContentLoaded', function() {
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js not loaded');
+    return;
+  }
+  var dark = document.body.classList.contains('dark');
+  var txt  = dark ? '#9ca3af' : '#6b7280';
+  var grid = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+  function doughnut(id, data) {
+    var ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: txt, font: { size: 10 }, boxWidth: 10, padding: 8 } },
+          tooltip: { callbacks: { label: function(c) { return ' ' + c.label + ': ' + c.raw; } } }
+        }
+      }
+    });
+  }
+
+  function bar(id, data, horiz) {
+    var ctx = document.getElementById(id);
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'bar',
+      data: data,
+      options: {
+        indexAxis: horiz ? 'y' : 'x',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: txt, font: { size: 10 } }, grid: { color: grid } },
+          y: { ticks: { color: txt, font: { size: 10 } }, grid: { color: grid } }
+        }
+      }
+    });
+  }
+
+  doughnut('chartAuth',   CHART_DATA.auth);
+  bar('chartAPI',         CHART_DATA.api_surface, false);
+  doughnut('chartAccess', CHART_DATA.access_model);
+  doughnut('chartBuild',  CHART_DATA.buildability);
+  doughnut('chartMCP',    CHART_DATA.mcp_support);
+
+  var bl = (STATS.top_blockers || []).slice(0, 6);
+  bar('chartBlockers', {
+    labels: bl.map(function(b) { return b.blocker; }),
+    datasets: [{ label: 'Count', data: bl.map(function(b) { return b.count; }),
+                 backgroundColor: '#6366f1', borderRadius: 4 }]
+  }, true);
+});
+</script>
 {% include "table_scripts.html" %}
 {% endblock %}

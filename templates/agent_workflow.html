@@ -1,0 +1,56 @@
+<section id="agent" style="padding-bottom:2.5rem;" class="fade-in">
+  <h2>The Agent — What It Built &amp; Where Humans Were Needed</h2>
+  <p style="margin-bottom:1.5rem;font-size:.875rem;">A multi-agent LangGraph pipeline. Each agent has a single responsibility, a structured output schema, and a retry budget. No monolithic "do everything" prompt.</p>
+
+  <!-- Pipeline steps -->
+  <div style="display:grid;grid-template-columns:1fr;gap:.75rem;margin-bottom:2rem;">
+    {% for step, icon, desc, human in [
+      ('1. Documentation Finder','🔍','Queries Tavily web search twice with different query formulations. Scores each candidate URL by domain match, path structure (/docs, /api, /reference), and cross-query agreement. Selects highest-scoring URL.','No human needed — URL scoring is deterministic'),
+      ('2. Documentation Parser','📄','Calls Firecrawl to extract clean markdown from docs pages. Falls back to Browser Use + Playwright if Firecrawl returns empty (bot-protected pages). Discovers auth/API/pricing subpages and chunks content into 8k-token segments.','Human needed: 3 apps had login-walled docs (Gladly, DealCloud, Waterfall.io)'),
+      ('3. Parallel Extraction (×4)','⚡','Auth Extractor, API Analyzer, Dev Portal Agent, and MCP Detector run concurrently on the same chunks. Each uses GPT-4o with a structured Pydantic output schema — no free-form text.','Human needed: access model was ambiguous for Salesforce and WhatsApp — both corrected'),
+      ('4. Evidence Collector','🔗','Creates a sourced Evidence record for every non-null field. Validates that source URLs are HTTPS and reachable. Flags any field with no evidence as confidence=0.0.','Automated — all 100 apps got at least 3 evidence records'),
+      ('5. Verification Agent','✅','Independent second pass using different doc sections and adversarial prompt framing. Compares Pass A vs Pass B field-by-field. Disagreements trigger the Tiebreaker Agent (GPT-4o reads both values).','Human reviewed 12 flagged records — corrected 2'),
+      ('6. Confidence Scorer','📊','Weighted formula: evidence_confidence × agreement_bonus × browser_verification_bonus. App-level score is a weighted average (auth=25%, api=20%, access=20%, mcp=10%, verdict=15%, docs=10%).','Fully automated'),
+      ('7. Pattern Discovery Engine','💡','SQL aggregates over all 100 verified records. Computes auth distribution, API surface distribution, MCP gap metric, easy wins (Self-Serve + REST + no MCP), and per-category breakdowns.','Fully automated'),
+    ] %}
+    <div style="display:flex;gap:1rem;padding:1rem;background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;align-items:flex-start;">
+      <div style="font-size:1.4rem;flex-shrink:0;margin-top:.1rem;">{{ icon }}</div>
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:.875rem;color:#111827;margin-bottom:.2rem;">{{ step }}</div>
+        <div style="font-size:.8rem;color:#6b7280;margin-bottom:.4rem;">{{ desc }}</div>
+        <div style="font-size:.7rem;padding:.25rem .6rem;border-radius:.35rem;display:inline-block;
+          {% if 'Human needed' in human %}background:#fff9c4;color:#78350f;border:1px solid #fde68a;
+          {% else %}background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;{% endif %}">
+          {% if 'Human needed' in human %}⚑ {{ human }}{% else %}✓ {{ human }}{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Where humans were needed summary -->
+  <div class="card" style="border-left:3px solid #f59e0b;">
+    <h3 style="margin-bottom:.75rem;color:#92400e;">⚑ Where Humans Were Actually Needed</h3>
+    <div style="display:grid;grid-template-columns:1fr;gap:.5rem;">
+      {% for app, reason in [
+        ('Salesforce','Agent classified as Gated — missed that the free Developer Edition gives self-serve API access'),
+        ('WhatsApp Business','Agent classified as Gated — missed the free Cloud API test phone number available instantly'),
+        ('Gladly','Docs are login-walled — access model could not be verified without an account'),
+        ('DealCloud','No public documentation found — marked Blocked, confirmed by human checking sales page'),
+        ('Waterfall.io','No public API — human confirmed contact-sales only path'),
+        ('Pylon','No developer docs found — human confirmed no public API exists yet'),
+        ('Fanbasis','No API documentation found anywhere — human confirmed no public API'),
+        ('iPayX','Minimal docs — human reviewed and confirmed Blocked verdict'),
+        ('NotebookLM','Agent confused NotebookLM with Gemini API — human corrected to Blocked/No API'),
+        ('Consensus','Agent found an OAuth mention in a blog — human confirmed it is still a waitlist only'),
+        ('Fathom','Agent found help articles but no API — human confirmed no public developer API'),
+        ('Paygent Connect','Agent could not find docs — human confirmed enterprise gateway, no public API'),
+      ] %}
+      <div style="display:flex;gap:.75rem;font-size:.8rem;padding:.4rem 0;border-bottom:1px solid #f3f4f6;">
+        <span style="font-weight:600;color:#111827;min-width:9rem;flex-shrink:0;">{{ app }}</span>
+        <span style="color:#6b7280;">{{ reason }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
