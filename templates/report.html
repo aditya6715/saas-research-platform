@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+{# ── Inject all data for JavaScript ──────────────────────────────────── #}
+<script>
+  const APP_DATA = {{ apps_json }};
+  const CHART_DATA = {{ chart_data_json }};
+  const SESSION = {{ session | tojson }};
+  const STATS = {{ statistics | tojson }};
+</script>
+
+{# ── Hero / Executive Summary ─────────────────────────────────────────── #}
+{% include "summary.html" %}
+
+{# ── Key Metrics Cards ────────────────────────────────────────────────── #}
+{% include "metrics.html" %}
+
+{# ── Charts ───────────────────────────────────────────────────────────── #}
+{% include "charts.html" %}
+
+{# ── Pattern Insights ─────────────────────────────────────────────────── #}
+{% include "insights.html" %}
+
+{# ── Research Data Table ──────────────────────────────────────────────── #}
+{% include "table.html" %}
+
+{# ── Verification & Accuracy ──────────────────────────────────────────── #}
+{% include "verification.html" %}
+
+{# ── Architecture Diagrams ────────────────────────────────────────────── #}
+{% include "architecture.html" %}
+
+{% endblock %}
+
+{% block scripts %}
+{% include "table_scripts.html" %}
+{% endblock %}

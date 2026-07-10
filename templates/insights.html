@@ -1,0 +1,68 @@
+{# ── Pattern Insights Panel ───────────────────────────────────────────── #}
+<section id="insights" class="pb-12 fade-in">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Key Insights</h2>
+
+  {# Headline insight #}
+  <div class="rounded-xl border border-brand-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 p-6 mb-6">
+    <div class="flex gap-3 items-start">
+      <span class="text-2xl mt-0.5">💡</span>
+      <p class="text-base font-medium text-indigo-900 dark:text-indigo-200">
+        {{ insights.get('headline', '') }}
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    {# Key findings #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+        <span class="text-brand-500">📊</span> Key Findings
+      </h3>
+      <ul class="space-y-3">
+        {% for finding in insights.get('key_findings', []) %}
+        <li class="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <span class="text-brand-500 mt-0.5 shrink-0">→</span>
+          <span>{{ finding }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {# Recommendations #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+        <span class="text-green-500">🎯</span> Recommendations
+      </h3>
+      <ul class="space-y-3">
+        {% for rec in insights.get('recommendations', []) %}
+        <li class="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <span class="text-green-500 mt-0.5 shrink-0">✓</span>
+          <span>{{ rec }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  {# Easy Wins strip #}
+  {% set easy = insights.get('easy_wins_preview', []) %}
+  {% if easy %}
+  <div class="mt-6 rounded-xl border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/30 p-5">
+    <h3 class="text-sm font-semibold text-green-700 dark:text-green-400 mb-3 flex items-center gap-2">
+      <span>⚡</span> Easy Wins — Highest Priority Integrations
+    </h3>
+    <div class="flex flex-wrap gap-2">
+      {% for app_name in easy %}
+      <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
+        {{ app_name }}
+      </span>
+      {% endfor %}
+      {% if statistics.easy_wins | length > easy | length %}
+      <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+        +{{ statistics.easy_wins | length - easy | length }} more
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</section>

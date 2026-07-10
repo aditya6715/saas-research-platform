@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  research-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      # Mount data dir to persist SQLite DB and cache
+      - ./data:/app/data
+      # Mount reports dir to access generated HTML outside container
+      - ./reports:/app/reports
+      # Mount logs
+      - ./logs:/app/logs
+    command: ["run", "--input", "data/apps.csv"]
+    # Optional: override concurrency
+    # command: ["run", "--input", "data/apps.csv"]
+    stdin_open: true
+    tty: true
+
+  # Optional: Run with --log-level DEBUG
+  research-debug:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: ["--log-level", "DEBUG", "run"]
+    profiles:
+      - debug

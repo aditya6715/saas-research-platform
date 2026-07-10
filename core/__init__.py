@@ -1,0 +1,1 @@
+# core — Platform orchestration infrastructure

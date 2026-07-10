@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+
+# Environment
+.env
+*.env.local
+
+# Runtime data (gitignored — large, machine-specific, contains secrets)
+data/
+logs/
+
+# Generated reports (not committed — use docs/ for GitHub Pages)
+reports/
+
+# docs/ IS committed — it contains the GitHub Pages deployment
+# docs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Playwright
+.playwright/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Node (if ever added)
+node_modules/

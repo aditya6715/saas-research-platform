@@ -1,0 +1,94 @@
+{# ── Architecture Diagrams ────────────────────────────────────────────── #}
+<section id="architecture" class="pb-12 fade-in">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">System Architecture</h2>
+
+  <div class="space-y-8">
+    {# System overview #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Research Pipeline</h3>
+      <div class="mermaid text-xs">
+flowchart LR
+    CSV[apps.csv] --> ING[Ingestor]
+    ING --> Q[Queue]
+    Q --> SCHED[Scheduler]
+    SCHED --> DF[Doc Finder]
+    DF --> DP[Doc Parser]
+    DP --> PAR{Parallel}
+    PAR --> AE[Auth Extractor]
+    PAR --> AA[API Analyzer]
+    PAR --> DPA[Dev Portal]
+    PAR --> MCP[MCP Detector]
+    AE --> EC[Evidence Collector]
+    AA --> EC
+    DPA --> EC
+    MCP --> EC
+    EC --> VA[Verifier]
+    VA --> TB[Tiebreaker]
+    TB --> CS[Confidence Score]
+    CS --> DB[(SQLite)]
+    DB --> PDE[Pattern Engine]
+    PDE --> RG[Report Generator]
+    RG --> HTML[report.html]
+      </div>
+    </div>
+
+    {# Verification pipeline #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Verification Pipeline</h3>
+      <div class="mermaid text-xs">
+flowchart TD
+    A[Pass A: Firecrawl + GPT-4o] --> CMP{Compare}
+    B[Pass B: Independent + Adversarial Prompt] --> CMP
+    CMP -->|Agree| BOOST[Confidence × 1.10]
+    CMP -->|Disagree| TB[Tiebreaker Agent GPT-4o]
+    TB --> BOOST2[Confidence × 0.90]
+    BOOST --> BV[Browser Verification]
+    BOOST2 --> BV
+    BV -->|Confirmed| FINAL[Confidence × 1.05]
+    BV -->|Failed| FINAL2[Keep score]
+    FINAL --> THRESH{Score ≥ 0.85?}
+    FINAL2 --> THRESH
+    THRESH -->|Yes| VER[✅ Verified]
+    THRESH -->|No| HR[⚑ Human Review]
+      </div>
+    </div>
+
+    {# Accuracy progression #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Accuracy Progression</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Stage</th>
+              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Mechanism</th>
+              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Target Accuracy</th>
+              <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Visual</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-600 dark:text-gray-400">
+            {% for stage, mechanism, accuracy, width in [
+              ('Initial Extraction', 'Single-pass GPT-4o on Firecrawl content', '~78%', 78),
+              ('Parallel Extraction', '4 specialized agents vs 1 monolithic', '~84%', 84),
+              ('Cross-Source Verification', 'Pass A vs Pass B agreement', '~91%', 91),
+              ('Browser Verification', 'Playwright confirms portal behavior', '~95%', 95),
+              ('Human Review', 'Human corrects flagged records', '~99%', 99),
+            ] %}
+            <tr>
+              <td class="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{{ stage }}</td>
+              <td class="px-4 py-2.5 text-xs">{{ mechanism }}</td>
+              <td class="px-4 py-2.5 font-mono text-brand-500 font-semibold">{{ accuracy }}</td>
+              <td class="px-4 py-2.5 w-32">
+                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                  <div class="h-2 bg-brand-500 rounded-full conf-bar" style="width: {{ width }}%"></div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>

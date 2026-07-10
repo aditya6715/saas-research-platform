@@ -1,0 +1,11 @@
+app_name,seed_url,category
+Stripe,https://stripe.com,Payments
+Twilio,https://twilio.com,Communications
+SendGrid,https://sendgrid.com,Email
+GitHub,https://github.com,Developer Tools
+Slack,https://slack.com,Collaboration
+Salesforce,https://salesforce.com,CRM
+HubSpot,https://hubspot.com,CRM
+Notion,https://notion.so,Productivity
+Airtable,https://airtable.com,Productivity
+Shopify,https://shopify.com,E-commerce

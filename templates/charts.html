@@ -1,0 +1,112 @@
+{# ── Charts Section ────────────────────────────────────────────────────── #}
+<section id="charts" class="pb-12 fade-in">
+  <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Distribution Analysis</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+
+    {# Auth Methods #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Authentication Methods</h3>
+      <div class="relative h-52">
+        <canvas id="chartAuth"></canvas>
+      </div>
+    </div>
+
+    {# API Surface #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">API Surface Types</h3>
+      <div class="relative h-52">
+        <canvas id="chartAPI"></canvas>
+      </div>
+    </div>
+
+    {# Access Model #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Access Model</h3>
+      <div class="relative h-52">
+        <canvas id="chartAccess"></canvas>
+      </div>
+    </div>
+
+    {# Buildability #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Buildability Verdict</h3>
+      <div class="relative h-52">
+        <canvas id="chartBuild"></canvas>
+      </div>
+    </div>
+
+    {# MCP Support #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">MCP Support Status</h3>
+      <div class="relative h-52">
+        <canvas id="chartMCP"></canvas>
+      </div>
+    </div>
+
+    {# Top Blockers horizontal bar #}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Top Blockers</h3>
+      <div class="relative h-52">
+        <canvas id="chartBlockers"></canvas>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const textColor = isDark ? '#9ca3af' : '#6b7280';
+  const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+
+  const donutOpts = (data) => ({
+    type: 'doughnut',
+    data: data,
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 }, boxWidth: 12, padding: 12 } },
+        tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw}` } },
+      },
+    },
+  });
+
+  const barOpts = (data, horizontal = false) => ({
+    type: 'bar',
+    data: data,
+    options: {
+      indexAxis: horizontal ? 'y' : 'x',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => ` ${ctx.raw}` } },
+      },
+      scales: {
+        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor }, grid: { color: gridColor } },
+      },
+    },
+  });
+
+  new Chart(document.getElementById('chartAuth'), donutOpts(CHART_DATA.auth));
+  new Chart(document.getElementById('chartAPI'), barOpts(CHART_DATA.api_surface));
+  new Chart(document.getElementById('chartAccess'), donutOpts(CHART_DATA.access_model));
+  new Chart(document.getElementById('chartBuild'), donutOpts(CHART_DATA.buildability));
+  new Chart(document.getElementById('chartMCP'), donutOpts(CHART_DATA.mcp_support));
+
+  // Blockers horizontal bar
+  const blockers = STATS.top_blockers || [];
+  const blockerData = {
+    labels: blockers.map(b => b.blocker),
+    datasets: [{
+      label: 'Count',
+      data: blockers.map(b => b.count),
+      backgroundColor: '#6366f1',
+      borderRadius: 4,
+    }],
+  };
+  new Chart(document.getElementById('chartBlockers'), barOpts(blockerData, true));
+})();
+</script>

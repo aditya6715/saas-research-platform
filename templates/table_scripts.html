@@ -1,0 +1,257 @@
+<script>
+// ── Table State ─────────────────────────────────────────────────────────
+let filteredApps = [...APP_DATA];
+let sortKey = 'app_name';
+let sortAsc = true;
+let openRowId = null;
+
+// ── Bootstrap ────────────────────────────────────────────────────────────
+(function init() {
+  populateCategoryFilter();
+  renderTable(APP_DATA);
+  restoreFromHash();
+})();
+
+function populateCategoryFilter() {
+  const cats = [...new Set(APP_DATA.map(a => a.category).filter(Boolean))].sort();
+  const sel = document.getElementById('filterCategory');
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+// ── Filter & Sort ────────────────────────────────────────────────────────
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('filterCategory').value;
+  const verdict = document.getElementById('filterVerdict').value;
+  const access = document.getElementById('filterAccess').value;
+  const mcp = document.getElementById('filterMCP').value;
+
+  filteredApps = APP_DATA.filter(a => {
+    const matchQ = !q || [a.app_name, a.category, a.primary_auth, a.description]
+      .some(v => v && v.toLowerCase().includes(q));
+    const matchCat = !cat || a.category === cat;
+    const matchVerdict = !verdict || a.buildability_verdict === verdict;
+    const matchAccess = !access || a.access_model === access;
+    const matchMCP = !mcp || a.mcp_support === mcp;
+    return matchQ && matchCat && matchVerdict && matchAccess && matchMCP;
+  });
+
+  sortApps();
+  renderTable(filteredApps);
+  updateHash();
+}
+
+function sortTable(key) {
+  if (sortKey === key) { sortAsc = !sortAsc; }
+  else { sortKey = key; sortAsc = true; }
+  sortApps();
+  renderTable(filteredApps);
+}
+
+function sortApps() {
+  filteredApps.sort((a, b) => {
+    let va = a[sortKey] ?? '';
+    let vb = b[sortKey] ?? '';
+    if (typeof va === 'number') return sortAsc ? va - vb : vb - va;
+    return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  ['filterCategory','filterVerdict','filterAccess','filterMCP'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  filterTable();
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+function renderTable(apps) {
+  const tbody = document.getElementById('appTableBody');
+  const noRes = document.getElementById('noResults');
+  document.getElementById('resultCount').textContent = apps.length;
+
+  if (!apps.length) {
+    tbody.innerHTML = '';
+    noRes.classList.remove('hidden');
+    return;
+  }
+  noRes.classList.add('hidden');
+
+  tbody.innerHTML = apps.map(a => `
+    ${rowHtml(a)}
+    ${detailHtml(a)}
+  `).join('');
+}
+
+function verdictBadge(v) {
+  if (!v) return '<span class="text-gray-400 text-xs">—</span>';
+  const map = {
+    'Fully Buildable': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+    'Buildable with Workarounds': 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300',
+    'Blocked': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+  };
+  const icon = { 'Fully Buildable': '✅', 'Buildable with Workarounds': '⚠️', 'Blocked': '🚫' };
+  const cls = map[v] || 'bg-gray-100 text-gray-700';
+  return `<span class="px-2 py-0.5 rounded-md text-xs font-medium ${cls}">${icon[v]||''} ${v}</span>`;
+}
+
+function mcpBadge(m) {
+  const map = {
+    'Official': '🔵', 'Community': '👥', 'In-Progress': '🔄', 'None': '—',
+  };
+  return `<span class="text-xs">${map[m] || '—'} ${m || '—'}</span>`;
+}
+
+function confBadge(c) {
+  if (c == null) return '—';
+  const pct = Math.round(c * 100);
+  const color = pct >= 90 ? 'text-green-600 dark:text-green-400'
+              : pct >= 70 ? 'text-amber-600 dark:text-amber-400'
+              : 'text-red-600 dark:text-red-400';
+  return `<span class="${color} font-medium text-xs">${pct}%</span>`;
+}
+
+function rowHtml(a) {
+  return `
+  <tr class="app-row hover:bg-gray-50 dark:hover:bg-gray-800/60"
+      onclick="toggleDetail('${a.id}')" data-id="${a.id}">
+    <td class="px-4 py-3">
+      <div class="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+        ${a.human_review_required ? '<span title="Needs human review" class="text-amber-400 text-xs">⚑</span>' : ''}
+        ${a.human_reviewed_by ? '<span title="Human verified" class="text-green-500 text-xs">✓</span>' : ''}
+        ${a.app_name}
+      </div>
+      <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate max-w-xs">${a.description || ''}</div>
+    </td>
+    <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 hidden sm:table-cell">${a.category || '—'}</td>
+    <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-300">${a.primary_auth || '—'}</td>
+    <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 hidden md:table-cell">${a.api_types_str || '—'}</td>
+    <td class="px-4 py-3">${verdictBadge(a.buildability_verdict)}</td>
+    <td class="px-4 py-3">${confBadge(a.confidence_score)}</td>
+    <td class="px-4 py-3 hidden lg:table-cell">${mcpBadge(a.mcp_support)}</td>
+    <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">${a.access_model || '—'}</td>
+  </tr>`;
+}
+
+function detailHtml(a) {
+  const evByField = {};
+  (a.evidence || []).forEach(e => {
+    if (!evByField[e.field_name]) evByField[e.field_name] = [];
+    evByField[e.field_name].push(e);
+  });
+
+  const fields = [
+    ['Auth Methods', a.auth_methods_str],
+    ['Primary Auth', a.primary_auth],
+    ['OAuth Flows', (a.oauth_flows||[]).join(', ')],
+    ['API Types', a.api_types_str],
+    ['Base API URL', a.base_api_url],
+    ['API Versioning', a.api_versioning],
+    ['Rate Limits', a.rate_limits],
+    ['OpenAPI Spec', a.openapi_url],
+    ['Access Model', a.access_model],
+    ['Pricing Tier', a.pricing_tier_for_api],
+    ['MCP Support', a.mcp_support],
+    ['MCP Repo', a.mcp_repo_url],
+    ['Biggest Blocker', a.biggest_blocker],
+    ['Docs URL', a.documentation_url],
+  ].filter(([_, v]) => v);
+
+  return `
+  <tr id="detail-${a.id}" class="hidden bg-gray-50/60 dark:bg-gray-800/30">
+    <td colspan="8" class="px-4 py-0">
+      <div class="detail-panel closed py-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+          ${fields.map(([k, v]) => `
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">${k}</p>
+              <p class="text-sm text-gray-800 dark:text-gray-200 break-all">${v || '—'}</p>
+              ${(evByField[k.toLowerCase().replace(/ /g,'_')]||[]).map(e => `
+                <a href="${e.source_url}" target="_blank" rel="noopener"
+                   class="block mt-1 text-xs text-brand-500 hover:underline truncate">${e.source_url}</a>
+                <p class="text-xs text-gray-400 italic mt-0.5 line-clamp-2">"${e.extracted_text||''}"</p>
+              `).join('')}
+            </div>
+          `).join('')}
+        </div>
+        ${a.human_reviewed_by ? `
+          <div class="mt-2 flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+            <span>✓</span>
+            <span>Human verified by <strong>${a.human_reviewed_by}</strong> on ${a.human_reviewed_at||''}</span>
+          </div>
+        ` : ''}
+        ${a.human_review_required ? `
+          <div class="mt-2 flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+            <span>⚑</span>
+            <span>Flagged for human review — confidence below threshold</span>
+          </div>
+        ` : ''}
+      </div>
+    </td>
+  </tr>`;
+}
+
+function toggleDetail(id) {
+  if (openRowId === id) {
+    closeDetail(id);
+    openRowId = null;
+    return;
+  }
+  if (openRowId) closeDetail(openRowId);
+  openDetail(id);
+  openRowId = id;
+}
+
+function openDetail(id) {
+  const row = document.getElementById(`detail-${id}`);
+  if (!row) return;
+  row.classList.remove('hidden');
+  requestAnimationFrame(() => {
+    row.querySelector('.detail-panel').classList.remove('closed');
+    row.querySelector('.detail-panel').classList.add('open');
+  });
+}
+
+function closeDetail(id) {
+  const row = document.getElementById(`detail-${id}`);
+  if (!row) return;
+  const panel = row.querySelector('.detail-panel');
+  panel.classList.remove('open');
+  panel.classList.add('closed');
+  setTimeout(() => row.classList.add('hidden'), 350);
+}
+
+// ── Hash-based URL state ─────────────────────────────────────────────────
+function updateHash() {
+  const params = new URLSearchParams();
+  const q = document.getElementById('searchInput').value;
+  const cat = document.getElementById('filterCategory').value;
+  const v = document.getElementById('filterVerdict').value;
+  const a = document.getElementById('filterAccess').value;
+  const m = document.getElementById('filterMCP').value;
+  if (q) params.set('q', q);
+  if (cat) params.set('cat', cat);
+  if (v) params.set('verdict', v);
+  if (a) params.set('access', a);
+  if (m) params.set('mcp', m);
+  const hash = params.toString();
+  history.replaceState(null, '', hash ? `#${hash}` : location.pathname);
+}
+
+function restoreFromHash() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  const params = new URLSearchParams(hash);
+  if (params.get('q')) document.getElementById('searchInput').value = params.get('q');
+  if (params.get('cat')) document.getElementById('filterCategory').value = params.get('cat');
+  if (params.get('verdict')) document.getElementById('filterVerdict').value = params.get('verdict');
+  if (params.get('access')) document.getElementById('filterAccess').value = params.get('access');
+  if (params.get('mcp')) document.getElementById('filterMCP').value = params.get('mcp');
+  filterTable();
+}
+</script>

@@ -1,0 +1,23 @@
+{
+  "app_name": "Stripe",
+  "category": "Payments",
+  "description": "Payment processing API for internet businesses",
+  "auth_methods": ["API Key", "OAuth 2.0"],
+  "primary_auth": "API Key",
+  "oauth_flows": ["authorization_code", "client_credentials"],
+  "access_model": "Self-Serve",
+  "pricing_tier_for_api": "Free tier available",
+  "api_types": ["REST", "Webhook"],
+  "base_api_url": "https://api.stripe.com/v1",
+  "api_versioning": "URL path (/v1)",
+  "rate_limits": "100 read ops/sec, 100 write ops/sec",
+  "openapi_url": "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json",
+  "graphql_schema_url": null,
+  "mcp_support": "Community",
+  "mcp_repo_url": "https://github.com/user/stripe-mcp-server",
+  "buildability_verdict": "Fully Buildable",
+  "biggest_blocker": null,
+  "documentation_url": "https://stripe.com/docs/api",
+  "confidence_score": 0.96,
+  "human_review_required": false
+}

@@ -1,0 +1,80 @@
+{# ── Key Metrics Cards ────────────────────────────────────────────────── #}
+<section class="pb-10 fade-in">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+    {# Fully Buildable #}
+    <div class="rounded-xl border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-green-600 dark:text-green-400">Fully Buildable</p>
+      <p class="mt-2 text-4xl font-bold text-green-700 dark:text-green-300">
+        {{ statistics.buildability_distribution.get('Fully Buildable', 0) }}
+      </p>
+      <p class="mt-1 text-xs text-green-600/70 dark:text-green-500/70">
+        {{ "%.0f"|format(statistics.buildability_distribution.get('Fully Buildable', 0) / [total_apps, 1]|max * 100) }}% of total
+      </p>
+    </div>
+
+    {# With Workarounds #}
+    <div class="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Workarounds</p>
+      <p class="mt-2 text-4xl font-bold text-amber-700 dark:text-amber-300">
+        {{ statistics.buildability_distribution.get('Buildable with Workarounds', 0) }}
+      </p>
+      <p class="mt-1 text-xs text-amber-600/70 dark:text-amber-500/70">need extra work</p>
+    </div>
+
+    {# Blocked #}
+    <div class="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">Blocked</p>
+      <p class="mt-2 text-4xl font-bold text-red-700 dark:text-red-300">
+        {{ statistics.buildability_distribution.get('Blocked', 0) }}
+      </p>
+      <p class="mt-1 text-xs text-red-600/70 dark:text-red-500/70">no public API / gated</p>
+    </div>
+
+    {# MCP Gap #}
+    <div class="rounded-xl border border-brand-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/40 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-600 dark:text-indigo-400">MCP Gap</p>
+      <p class="mt-2 text-4xl font-bold text-brand-700 dark:text-indigo-300">
+        {{ "%.0f"|format(statistics.mcp_gap_percentage) }}%
+      </p>
+      <p class="mt-1 text-xs text-brand-600/70 dark:text-indigo-500/70">apps with API, no MCP</p>
+    </div>
+
+  </div>
+
+  {# Second row: confidence + counts #}
+  <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Avg Confidence</p>
+      <p class="mt-2 text-3xl font-bold text-gray-800 dark:text-gray-100">
+        {{ "%.1f"|format(statistics.avg_confidence * 100) }}%
+      </p>
+      <div class="mt-2 h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full">
+        <div class="conf-bar h-1.5 rounded-full bg-brand-500"
+             style="width: {{ "%.1f"|format(statistics.avg_confidence * 100) }}%"></div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Apps Researched</p>
+      <p class="mt-2 text-3xl font-bold text-gray-800 dark:text-gray-100">{{ total_apps }}</p>
+      <p class="mt-1 text-xs text-gray-400">{{ statistics.verified_count }} verified</p>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Human Reviews</p>
+      <p class="mt-2 text-3xl font-bold text-gray-800 dark:text-gray-100">{{ statistics.human_review_count }}</p>
+      <p class="mt-1 text-xs text-gray-400">flagged for review</p>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5">
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Official MCP</p>
+      <p class="mt-2 text-3xl font-bold text-gray-800 dark:text-gray-100">
+        {{ statistics.mcp_support_distribution.get('Official', 0) }}
+      </p>
+      <p class="mt-1 text-xs text-gray-400">
+        + {{ statistics.mcp_support_distribution.get('Community', 0) }} community
+      </p>
+    </div>
+  </div>
+</section>

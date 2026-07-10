@@ -1,0 +1,89 @@
+# ============================================================
+# SaaS Research Platform — Pipeline Configuration
+# All values here can be overridden via environment variables.
+# ============================================================
+
+pipeline:
+  # Number of apps processed concurrently
+  concurrency: 5
+
+  # Max retries per app before marking as failed
+  max_retries: 3
+
+  # Seconds before an in-progress app is considered timed out
+  timeout_seconds: 120
+
+  # Minimum confidence score; below this, flag for human review
+  confidence_threshold: 0.85
+
+  # Max documentation subpages to crawl per app (BFS)
+  max_doc_pages: 20
+
+  # Max depth for documentation link following
+  max_doc_depth: 3
+
+models:
+  # Model used for extraction (auth, API analysis, verification)
+  extraction: gpt-4o
+
+  # Model used for classification and scoring (cheaper)
+  classification: gpt-4o-mini
+
+  # Model used for tiebreaker resolution
+  tiebreaker: gpt-4o
+
+  # Max tokens per LLM call
+  max_tokens: 4096
+
+cache:
+  # Time-to-live for cached HTTP responses (seconds)
+  # Default: 24 hours
+  ttl_seconds: 86400
+
+  # Whether to use disk cache (set false to always re-fetch)
+  enabled: true
+
+rate_limits:
+  # Minimum seconds between requests to the same domain
+  min_inter_request_delay: 1.0
+
+  # Initial backoff on 429 (seconds)
+  backoff_initial: 5.0
+
+  # Maximum backoff on 429 (seconds)
+  backoff_max: 120.0
+
+  # Backoff multiplier (exponential)
+  backoff_multiplier: 2.0
+
+verification:
+  # Fields that always get browser verification
+  browser_verify_fields:
+    - access_model
+    - auth_methods
+
+  # Number of parallel verification passes
+  verification_passes: 2
+
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO
+
+  # Max size of each log file (bytes)
+  max_file_size: 52428800  # 50 MB
+
+  # Number of rotated log files to keep
+  backup_count: 5
+
+output:
+  # Include Mermaid diagrams in the HTML report
+  include_diagrams: true
+
+  # Include raw evidence snippets in HTML report
+  include_evidence: true
+
+  # Number of "easy win" apps to highlight
+  easy_wins_count: 10
+
+  # Minimum confidence to appear in "easy wins"
+  easy_wins_min_confidence: 0.85
