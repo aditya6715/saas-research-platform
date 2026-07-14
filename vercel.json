@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": "docs",
+  "framework": null,
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/submission", "dest": "/submission.html" },
+    { "src": "/docs", "dest": "/documentation.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
